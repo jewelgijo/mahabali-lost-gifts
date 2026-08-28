@@ -442,201 +442,271 @@ function nextLevel() {
 
 }
 
-
 // =====================================================
 // MISSION 1
-// POOKKALAM CORE
+// POOKKALAM MEMORY CHALLENGE
 // =====================================================
 
 function loadPookkalam(container) {
+  const card = levelShell(
+    "POOKKALAM CORE",
+    "MEMORY // PRECISION",
+    "Memorize the flower sequence, then rebuild it before time runs out."
+  )
 
-  const card =
-    levelShell(
-      "POOKKALAM CORE",
-      "PATTERN // MEMORY",
-      "Rebuild the target flower sequence. Click the cells in the correct order."
-    );
+  const flowers = ["🌼", "🌺", "🌸", "🪷", "🌻"]
 
+  // ---------------------------------------------
+  // TARGET SEQUENCE
+  // ---------------------------------------------
 
-  const grid =
-    document.createElement("div");
-
-
-  grid.className =
-    "pook-grid";
-
-
-  const flowers = [
+  const targetSequence = [
     "🌼",
     "🌺",
     "🌸",
     "🪷",
-    "🌻"
-  ];
+    "🌻",
+    "🌸",
+    "🌺",
+    "🌼",
+  ]
 
+  state.pookPattern = targetSequence
+  state.pookSelected = []
 
-  state.pookSelected = [];
+  // ---------------------------------------------
+  // TARGET DISPLAY
+  // ---------------------------------------------
 
+  const targetBox = document.createElement("div")
 
-  const targetCells = [
-    2,
-    7,
-    12,
-    11,
-    13,
-    17,
-    22,
-    12
-  ];
+  targetBox.className = "memory-target"
 
+  targetBox.innerHTML = `
+    <div class="eyebrow">
+      MEMORY SEQUENCE
+    </div>
 
-  for (let i = 0; i < 25; i++) {
+    <div class="target-sequence">
+      ${targetSequence
+        .map(
+          (flower, index) => `
+            <span
+              class="target-flower"
+              data-target="${index}"
+            >
+              ${flower}
+            </span>
+          `
+        )
+        .join("")}
+    </div>
 
-    const button =
-      document.createElement("button");
+    <p class="memory-status">
+      Memorize the sequence...
+    </p>
+  `
 
+  card.appendChild(targetBox)
 
-    button.className =
-      "flower";
+  // ---------------------------------------------
+  // GRID
+  // ---------------------------------------------
 
+  const grid = document.createElement("div")
 
-    button.textContent =
+  grid.className = "pook-grid"
+
+  // We need enough copies of every flower
+  // required by the target sequence.
+  const requiredFlowers = [...targetSequence]
+
+  // Add decoy flowers
+  while (requiredFlowers.length < 25) {
+    requiredFlowers.push(
       flowers[
         Math.floor(
-          Math.random() *
-          flowers.length
+          Math.random() * flowers.length
         )
-      ];
+      ]
+    )
+  }
 
+  // Shuffle board
+  requiredFlowers.sort(
+    () => Math.random() - 0.5
+  )
 
-    button.dataset.i = i;
+  const buttons = []
 
+  requiredFlowers.forEach((flower, index) => {
+    const button = document.createElement("button")
 
+    button.className = "flower"
+
+    button.type = "button"
+
+    button.textContent = flower
+
+    button.dataset.flower = flower
+
+    button.dataset.index = index
+
+    button.disabled = true
+
+    buttons.push(button)
+
+    grid.appendChild(button)
+  })
+
+  card.appendChild(grid)
+
+  // ---------------------------------------------
+  // MEMORY COUNTDOWN
+  // ---------------------------------------------
+
+  let memoryTime = 5
+
+  const status = targetBox.querySelector(
+    ".memory-status"
+  )
+
+  status.textContent =
+    `Memorize the sequence... ${memoryTime}`
+
+  const memoryTimer = setInterval(() => {
+    memoryTime--
+
+    if (memoryTime > 0) {
+      status.textContent =
+        `Memorize the sequence... ${memoryTime}`
+    } else {
+      clearInterval(memoryTimer)
+
+      // Hide target sequence
+      targetBox.classList.add(
+        "sequence-hidden"
+      )
+
+      status.textContent =
+        "GO! Rebuild the sequence."
+
+      // Enable buttons
+      buttons.forEach((button) => {
+        button.disabled = false
+      })
+
+      // Start actual game timer
+      startTimer(45, () => {
+        toast("Memory timed out!")
+
+        setTimeout(() => {
+          loadLevel(0)
+        }, 700)
+      })
+    }
+  }, 1000)
+
+  // ---------------------------------------------
+  // PLAYER CLICK LOGIC
+  // ---------------------------------------------
+
+  buttons.forEach((button) => {
     button.onclick = () => {
-
-      const index =
-        Number(button.dataset.i);
-
-
-      const wanted =
-        targetCells[
+      const expected =
+        targetSequence[
           state.pookSelected.length
-        ];
+        ]
 
+      const clicked =
+        button.dataset.flower
 
-      if (index === wanted) {
+      // -----------------------------------------
+      // CORRECT FLOWER
+      // -----------------------------------------
 
+      if (clicked === expected) {
         button.classList.add(
           "selected",
           "correct"
-        );
+        )
 
+        button.disabled = true
 
-        state.pookSelected.push(index);
+        state.pookSelected.push(
+          clicked
+        )
 
+        // Highlight corresponding
+        // target sequence item
+        const targetItem =
+          targetBox.querySelector(
+            `[data-target="${state.pookSelected.length - 1}"]`
+          )
 
-        beep(520, 0.07);
+        if (targetItem) {
+          targetItem.classList.add(
+            "completed"
+          )
+        }
 
+        beep(620, 0.07)
+
+        addXP(100)
+
+        status.textContent =
+          `Correct! ${state.pookSelected.length}/${targetSequence.length}`
+
+        // ---------------------------------------
+        // COMPLETED
+        // ---------------------------------------
 
         if (
           state.pookSelected.length ===
-          targetCells.length
+          targetSequence.length
         ) {
+          clearInterval(state.timer)
 
-          addXP(180);
+          buttons.forEach((button) => {
+            button.disabled = true
+          })
 
-          toast(
-            "POOKKALAM CORE RESTORED +XP"
-          );
+          status.textContent =
+            "✓ POOKKALAM RESTORED!"
 
-
-          setTimeout(
-            nextLevel,
-            900
-          );
-
-        }
-
-      } else {
-
-        button.classList.add(
-          "wrong"
-        );
-
-
-        setTimeout(() => {
-
-          button.classList.remove(
-            "wrong"
-          );
-
-        }, 350);
-
-
-        if (!mistake()) {
+          addXP(250)
 
           toast(
-            "Wrong flower — combo reset"
-          );
+            "POOKKALAM RESTORED! + BONUS XP"
+          )
 
+          setTimeout(() => {
+            nextLevel()
+          }, 1000)
         }
-
       }
 
-    };
+      // -----------------------------------------
+      // WRONG FLOWER
+      // -----------------------------------------
 
+      else {
+        button.classList.add("wrong")
 
-    grid.appendChild(button);
+        setTimeout(() => {
+          button.classList.remove("wrong")
+        }, 400)
 
-  }
+        const lostAllLives = mistake()
 
-
-  card.appendChild(grid);
-
-
-  const message =
-    document.createElement("div");
-
-
-  message.className =
-    "center-message";
-
-
-  message.innerHTML = `
-
-    TARGET SEQUENCE:
-
-    <b>
-      🌼 → 🌺 → 🌸 → 🪷 →
-      🌻 → 🌸 → 🌺 → 🌼
-    </b>
-
-    <br><br>
-
-    <small>
-      Hint: the glowing core moves
-      in a symmetric path.
-    </small>
-
-  `;
-
-
-  card.appendChild(message);
-
-
-  startTimer(
-    45,
-    () => {
-
-      toast(
-        "Memory timed out."
-      );
-
-      loadLevel(0);
-
+        if (!lostAllLives) {
+          toast(
+            `Wrong flower! Need ${expected}`
+          )
+        }
+      }
     }
-  );
-
+  })
 }
 
 
