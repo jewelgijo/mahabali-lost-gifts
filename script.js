@@ -1,1063 +1,1896 @@
-/* =========================================
-   MAHABALI'S LOST GIFTS
-   ONAM.exe
-========================================= */
+const $ = (selector) =>
+  document.querySelector(selector);
 
 
-/* =========================================
-   GAME STATE
-========================================= */
+// =====================================================
+// SCREEN REFERENCES
+// =====================================================
 
-let currentLevel = 0;
-
-let score = 0;
-
-let lives = 3;
-
-let timeLeft = 30;
-
-let combo = 0;
-
-let flowerCount = 0;
-
-let boatScore = 0;
-
-let sadyaScore = 0;
-
-let flowerFinalScore = 0;
-
-let boatFinalScore = 0;
-
-let sadyaFinalScore = 0;
-
-let timerInterval = null;
-
-let flowerInterval = null;
-
-let boatInterval = null;
-
-let rhythmInterval = null;
-
-let rhythmPosition = 0;
-
-let rhythmDirection = 1;
-
-let basketPosition = 50;
-
-let boatPosition = 5;
-
-let enemyBoatPosition = 5;
-
-let currentDishIndex = 0;
+const screens = {
+  start: $("#startScreen"),
+  briefing: $("#briefingScreen"),
+  game: $("#gameScreen"),
+  final: $("#finalScreen"),
+  leader: $("#leaderScreen"),
+};
 
 
-/* =========================================
-   LEVEL DATA
-========================================= */
+// =====================================================
+// GAME STATE
+// =====================================================
 
-const levels = [
+let state = {
 
-  {
-    number: 1,
-    icon: "🌸",
-    title: "FIND THE FLOWERS",
-    description:
-      "Collect flowers to help Mahabali create the perfect Pookalam!",
-    instruction:
-      "Move your basket left and right and catch 15 falling flowers."
-  },
+  mission: 0,
 
-  {
-    number: 2,
-    icon: "🚣",
-    title: "VALLAM KALI",
-    description:
-      "Help Mahabali win the legendary snake boat race!",
-    instruction:
-      "Press SPACE or click ROW when the marker reaches the PERFECT zone."
-  },
+  xp: 0,
 
-  {
-    number: 3,
-    icon: "🍛",
-    title: "SADYA MASTER",
-    description:
-      "Prepare the perfect Onam Sadya for Mahabali!",
-    instruction:
-      "Read Mahabali's request and click the correct dish."
+  combo: 1,
+
+  bestCombo: 1,
+
+  lives: 3,
+
+  time: 45,
+
+  timer: null,
+
+  levelTimer: null,
+
+  sound: true,
+
+  boatX: 50,
+
+  boatObjects: [],
+
+  huntFound: 0,
+
+  pookPattern: [],
+
+  pookSelected: [],
+
+  finalScore: 0
+
+};
+
+
+// =====================================================
+// SOUND
+// =====================================================
+
+function beep(
+  frequency = 440,
+  duration = 0.08,
+  type = "sine"
+) {
+
+  if (!state.sound) {
+    return;
   }
 
-];
+  try {
 
+    const AudioContext =
+      window.AudioContext ||
+      window.webkitAudioContext;
 
-/* =========================================
-   DOM HELPERS
-========================================= */
+    const ctx =
+      beep.ctx ||
+      (beep.ctx = new AudioContext());
 
-function get(id) {
-  return document.getElementById(id);
+    const oscillator =
+      ctx.createOscillator();
+
+    const gain =
+      ctx.createGain();
+
+    oscillator.type = type;
+
+    oscillator.frequency.value =
+      frequency;
+
+    gain.gain.setValueAtTime(
+      0.045,
+      ctx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.001,
+      ctx.currentTime + duration
+    );
+
+    oscillator.connect(gain);
+
+    gain.connect(ctx.destination);
+
+    oscillator.start();
+
+    oscillator.stop(
+      ctx.currentTime + duration
+    );
+
+  } catch (error) {
+
+    console.log("Audio unavailable");
+
+  }
+
 }
 
 
-function showScreen(id) {
+// =====================================================
+// TOAST
+// =====================================================
 
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.remove("active");
-  });
+function toast(message) {
 
-  get(id).classList.add("active");
+  const element = $("#toast");
+
+  element.textContent = message;
+
+  element.classList.add("show");
+
+  setTimeout(() => {
+
+    element.classList.remove("show");
+
+  }, 1800);
+
 }
 
 
-/* =========================================
-   START GAME
-========================================= */
+// =====================================================
+// SCREEN NAVIGATION
+// =====================================================
 
-function startGame() {
+function showScreen(name) {
 
-  score = 0;
-  lives = 3;
-  combo = 0;
+  Object
+    .values(screens)
+    .forEach((screen) => {
 
-  flowerCount = 0;
+      screen.classList.remove("active");
 
-  boatScore = 0;
+    });
 
-  sadyaScore = 0;
+  screens[name].classList.add("active");
 
-  flowerFinalScore = 0;
-  boatFinalScore = 0;
-  sadyaFinalScore = 0;
+  window.scrollTo(0, 0);
 
-  currentLevel = 0;
-
-  updateHUD();
-
-  showLevelIntro();
 }
 
 
-/* =========================================
-   LEVEL INTRO
-========================================= */
+// =====================================================
+// HUD
+// =====================================================
 
-function showLevelIntro() {
+function updateHud() {
 
-  const level = levels[currentLevel];
+  $("#missionNumber").textContent =
+    `${String(state.mission + 1).padStart(2, "0")} / 04`;
 
-  get("level-icon").textContent = level.icon;
 
-  get("level-title").textContent = level.title;
+  $("#xpText").textContent =
+    String(Math.floor(state.xp)).padStart(4, "0");
 
-  get("level-description").textContent =
-    level.description;
 
-  get("level-instruction").textContent =
-    level.instruction;
+  $("#comboText").textContent =
+    `x${state.combo}`;
 
-  get("level-intro-screen")
-    .querySelector(".level-number")
-    .textContent =
-    `LEVEL ${level.number}`;
 
-  showScreen("level-intro-screen");
+  $("#livesText").textContent =
+    "♥ ".repeat(state.lives).trim() +
+    (state.lives ? "" : "—");
+
+
+  $("#timerText").textContent =
+    `00:${String(
+      Math.max(0, state.time)
+    ).padStart(2, "0")}`;
+
+
+  $("#xpBar").style.width =
+    Math.min(
+      100,
+      (state.xp % 1000) / 10
+    ) + "%";
+
 }
 
 
-/* =========================================
-   BEGIN LEVEL
-========================================= */
+// =====================================================
+// TIMER
+// =====================================================
 
-function beginCurrentLevel() {
+function startTimer(seconds, onEnd) {
 
-  clearAllIntervals();
+  clearInterval(state.timer);
 
-  get("game-hud").classList.add("show");
+  state.time = seconds;
 
-  updateHUD();
-
-  if (currentLevel === 0) {
-    startFlowerGame();
-  }
-
-  else if (currentLevel === 1) {
-    startBoatGame();
-  }
-
-  else if (currentLevel === 2) {
-    startSadyaGame();
-  }
-}
+  updateHud();
 
 
-/* =========================================
-   HUD
-========================================= */
+  state.timer = setInterval(() => {
 
-function updateHUD() {
+    state.time--;
 
-  get("score").textContent = score;
-
-  get("timer").textContent = timeLeft;
-
-  get("combo").textContent = combo;
-
-  let hearts = "";
-
-  for (let i = 0; i < lives; i++) {
-    hearts += "❤️";
-  }
-
-  if (hearts === "") {
-    hearts = "💔";
-  }
-
-  get("lives").textContent = hearts;
-}
+    updateHud();
 
 
-/* =========================================
-   TIMER
-========================================= */
+    if (state.time <= 0) {
 
-function startTimer(seconds, callback) {
+      clearInterval(state.timer);
 
-  clearInterval(timerInterval);
-
-  timeLeft = seconds;
-
-  updateHUD();
-
-  timerInterval = setInterval(() => {
-
-    timeLeft--;
-
-    updateHUD();
-
-    if (timeLeft <= 0) {
-
-      clearInterval(timerInterval);
-
-      callback();
+      onEnd();
 
     }
 
   }, 1000);
+
 }
 
 
-/* =========================================
-   LEVEL 1
-   FLOWER GAME
-========================================= */
+// =====================================================
+// XP SYSTEM
+// =====================================================
 
-function startFlowerGame() {
+function addXP(amount) {
 
-  flowerCount = 0;
+  state.xp +=
+    amount * state.combo;
 
-  basketPosition = 50;
 
-  get("flowers-collected").textContent = "0";
+  state.combo++;
 
-  get("basket").style.left =
-    basketPosition + "%";
 
-  showScreen("flower-game");
+  state.bestCombo =
+    Math.max(
+      state.bestCombo,
+      state.combo
+    );
 
-  const area = get("flower-area");
 
-  area.querySelectorAll(".falling-flower")
-    .forEach(flower => flower.remove());
+  updateHud();
 
-  startTimer(30, () => {
-
-    if (flowerCount >= 15) {
-      finishFlowerGame();
-    } else {
-      showMessage(
-        "⏰",
-        "Time's up!"
-      );
-
-      finishFlowerGame();
-    }
-
-  });
-
-  flowerInterval = setInterval(createFlower, 650);
 }
 
 
-/* =========================================
-   CREATE FALLING FLOWER
-========================================= */
+// =====================================================
+// MISTAKE / LIFE SYSTEM
+// =====================================================
 
-function createFlower() {
+function mistake() {
 
-  const area = get("flower-area");
+  state.lives--;
 
-  const flower = document.createElement("div");
+  state.combo = 1;
 
-  flower.classList.add("falling-flower");
+  updateHud();
+
+  beep(
+    150,
+    0.12,
+    "sawtooth"
+  );
+
+
+  if (state.lives <= 0) {
+
+    clearInterval(state.timer);
+
+    toast(
+      "All lives lost — restarting mission."
+    );
+
+
+    setTimeout(() => {
+
+      state.lives = 3;
+
+      loadLevel(state.mission);
+
+    }, 900);
+
+    return true;
+  }
+
+
+  return false;
+
+}
+
+
+// =====================================================
+// LOAD LEVEL
+// =====================================================
+
+function loadLevel(index) {
+
+  clearInterval(state.timer);
+
+  state.mission = index;
+
+  state.combo = 1;
+
+  updateHud();
+
+
+  const container =
+    $("#levelContainer");
+
+
+  container.innerHTML = "";
+
+
+  if (index === 0) {
+
+    loadPookkalam(container);
+
+  }
+
+
+  if (index === 1) {
+
+    loadVallam(container);
+
+  }
+
+
+  if (index === 2) {
+
+    loadHunt(container);
+
+  }
+
+
+  if (index === 3) {
+
+    loadChoice(container);
+
+  }
+
+}
+
+
+// =====================================================
+// LEVEL TEMPLATE
+// =====================================================
+
+function levelShell(
+  title,
+  tag,
+  description
+) {
+
+  const element =
+    document.createElement("div");
+
+
+  element.className =
+    "level-card";
+
+
+  element.innerHTML = `
+
+    <div class="level-header">
+
+      <div>
+
+        <div class="eyebrow">
+          ${tag}
+        </div>
+
+        <h2>
+          ${title}
+        </h2>
+
+        <p>
+          ${description}
+        </p>
+
+      </div>
+
+      <div class="level-tag">
+        MEMORY
+        ${String(
+          state.mission + 1
+        ).padStart(2, "0")}
+      </div>
+
+    </div>
+
+  `;
+
+
+  $("#levelContainer")
+    .appendChild(element);
+
+
+  return element;
+
+}
+
+
+// =====================================================
+// NEXT LEVEL
+// =====================================================
+
+function nextLevel() {
+
+  clearInterval(state.timer);
+
+  clearInterval(state.levelTimer);
+
+
+  if (state.mission < 3) {
+
+    state.mission++;
+
+
+    setTimeout(() => {
+
+      loadLevel(state.mission);
+
+    }, 450);
+
+  } else {
+
+    finishGame();
+
+  }
+
+}
+
+
+// =====================================================
+// MISSION 1
+// POOKKALAM CORE
+// =====================================================
+
+function loadPookkalam(container) {
+
+  const card =
+    levelShell(
+      "POOKKALAM CORE",
+      "PATTERN // MEMORY",
+      "Rebuild the target flower sequence. Click the cells in the correct order."
+    );
+
+
+  const grid =
+    document.createElement("div");
+
+
+  grid.className =
+    "pook-grid";
+
 
   const flowers = [
     "🌼",
-    "🌸",
     "🌺",
-    "🌻",
-    "🌷"
+    "🌸",
+    "🪷",
+    "🌻"
   ];
 
-  flower.textContent =
-    flowers[Math.floor(Math.random() * flowers.length)];
 
-  const left =
-    Math.random() * 90 + 5;
+  state.pookSelected = [];
 
-  flower.style.left = left + "%";
 
-  flower.style.top = "-50px";
+  const targetCells = [
+    2,
+    7,
+    12,
+    11,
+    13,
+    17,
+    22,
+    12
+  ];
 
-  area.appendChild(flower);
 
-  let position = -50;
+  for (let i = 0; i < 25; i++) {
 
-  const fallSpeed =
-    2 + Math.random() * 2;
+    const button =
+      document.createElement("button");
 
-  const fallInterval =
-    setInterval(() => {
 
-      position += fallSpeed;
+    button.className =
+      "flower";
 
-      flower.style.top =
-        position + "px";
 
-      if (position > area.clientHeight - 90) {
+    button.textContent =
+      flowers[
+        Math.floor(
+          Math.random() *
+          flowers.length
+        )
+      ];
 
-        clearInterval(fallInterval);
 
-        flower.remove();
+    button.dataset.i = i;
 
-        return;
+
+    button.onclick = () => {
+
+      const index =
+        Number(button.dataset.i);
+
+
+      const wanted =
+        targetCells[
+          state.pookSelected.length
+        ];
+
+
+      if (index === wanted) {
+
+        button.classList.add(
+          "selected",
+          "correct"
+        );
+
+
+        state.pookSelected.push(index);
+
+
+        beep(520, 0.07);
+
+
+        if (
+          state.pookSelected.length ===
+          targetCells.length
+        ) {
+
+          addXP(180);
+
+          toast(
+            "POOKKALAM CORE RESTORED +XP"
+          );
+
+
+          setTimeout(
+            nextLevel,
+            900
+          );
+
+        }
+
+      } else {
+
+        button.classList.add(
+          "wrong"
+        );
+
+
+        setTimeout(() => {
+
+          button.classList.remove(
+            "wrong"
+          );
+
+        }, 350);
+
+
+        if (!mistake()) {
+
+          toast(
+            "Wrong flower — combo reset"
+          );
+
+        }
+
       }
 
-      checkFlowerCollision(
-        flower,
-        position
+    };
+
+
+    grid.appendChild(button);
+
+  }
+
+
+  card.appendChild(grid);
+
+
+  const message =
+    document.createElement("div");
+
+
+  message.className =
+    "center-message";
+
+
+  message.innerHTML = `
+
+    TARGET SEQUENCE:
+
+    <b>
+      🌼 → 🌺 → 🌸 → 🪷 →
+      🌻 → 🌸 → 🌺 → 🌼
+    </b>
+
+    <br><br>
+
+    <small>
+      Hint: the glowing core moves
+      in a symmetric path.
+    </small>
+
+  `;
+
+
+  card.appendChild(message);
+
+
+  startTimer(
+    45,
+    () => {
+
+      toast(
+        "Memory timed out."
       );
 
-    }, 30);
+      loadLevel(0);
 
-  flower.dataset.interval =
-    fallInterval;
-}
-
-
-/* =========================================
-   FLOWER COLLISION
-========================================= */
-
-function checkFlowerCollision(
-  flower,
-  position
-) {
-
-  if (!flower.parentElement) {
-    return;
-  }
-
-  const flowerRect =
-    flower.getBoundingClientRect();
-
-  const basketRect =
-    get("basket").getBoundingClientRect();
-
-  const collision =
-    flowerRect.bottom >= basketRect.top &&
-    flowerRect.left < basketRect.right &&
-    flowerRect.right > basketRect.left;
-
-  if (collision) {
-
-    clearInterval(
-      Number(flower.dataset.interval)
-    );
-
-    flower.remove();
-
-    flowerCount++;
-
-    combo++;
-
-    score +=
-      10 + (combo * 2);
-
-    get("flowers-collected")
-      .textContent = flowerCount;
-
-    updateHUD();
-
-    showMessage(
-      "🌸",
-      `+${10 + combo * 2} FLOWER!`
-    );
-
-    if (flowerCount >= 15) {
-      finishFlowerGame();
     }
-  }
-}
-
-
-/* =========================================
-   MOVE BASKET
-========================================= */
-
-function moveBasket(direction) {
-
-  if (
-    currentLevel !== 0 ||
-    !get("flower-game").classList.contains("active")
-  ) {
-    return;
-  }
-
-  if (direction === "left") {
-    basketPosition -= 7;
-  }
-
-  else {
-    basketPosition += 7;
-  }
-
-  basketPosition =
-    Math.max(
-      8,
-      Math.min(92, basketPosition)
-    );
-
-  get("basket").style.left =
-    basketPosition + "%";
-}
-
-
-/* =========================================
-   KEYBOARD
-========================================= */
-
-document.addEventListener("keydown", event => {
-
-  if (
-    event.key === "ArrowLeft" ||
-    event.key.toLowerCase() === "a"
-  ) {
-
-    moveBasket("left");
-
-  }
-
-  if (
-    event.key === "ArrowRight" ||
-    event.key.toLowerCase() === "d"
-  ) {
-
-    moveBasket("right");
-
-  }
-
-  if (
-    event.code === "Space" &&
-    currentLevel === 1 &&
-    get("boat-game").classList.contains("active")
-  ) {
-
-    event.preventDefault();
-
-    rowBoat();
-  }
-
-});
-
-
-/* =========================================
-   FINISH FLOWER GAME
-========================================= */
-
-function finishFlowerGame() {
-
-  clearInterval(flowerInterval);
-
-  clearInterval(timerInterval);
-
-  flowerFinalScore = score;
-
-  showMessage(
-    "🎉",
-    "Pookalam Complete!"
   );
 
-  setTimeout(() => {
-
-    currentLevel = 1;
-
-    showLevelIntro();
-
-  }, 1500);
 }
 
 
-/* =========================================
-   LEVEL 2
-   BOAT GAME
-========================================= */
+// =====================================================
+// MISSION 2
+// VALLAM RUSH
+// =====================================================
 
-function startBoatGame() {
+function loadVallam(container) {
 
-  showScreen("boat-game");
+  const card =
+    levelShell(
+      "VALLAM RUSH",
+      "REFLEX // SPEED",
+      "Steer the snake boat, collect golden energy and avoid the rocks."
+    );
 
-  boatPosition = 5;
 
-  enemyBoatPosition = 5;
+  const wrap =
+    document.createElement("div");
 
-  get("player-boat").style.left =
-    boatPosition + "%";
 
-  get("enemy-boat").style.left =
-    enemyBoatPosition + "%";
+  wrap.className =
+    "boat-wrap";
 
-  rhythmPosition = 0;
 
-  rhythmDirection = 1;
+  wrap.innerHTML = `
 
-  boatScore = 0;
+    <div class="boat-track"></div>
 
-  startTimer(35, () => {
+    <div
+      id="boatPlayer"
+      class="boat-player"
+    >
+      🚣
+    </div>
 
-    finishBoatGame();
+  `;
 
-  });
 
-  rhythmInterval = setInterval(() => {
+  card.appendChild(wrap);
 
-    rhythmPosition +=
-      2.5 * rhythmDirection;
 
-    if (rhythmPosition >= 98) {
-      rhythmDirection = -1;
-    }
+  const controls =
+    document.createElement("div");
 
-    if (rhythmPosition <= 0) {
-      rhythmDirection = 1;
-    }
 
-    get("rhythm-marker").style.left =
-      rhythmPosition + "%";
+  controls.className =
+    "boat-controls";
 
-  }, 50);
 
-  boatInterval = setInterval(() => {
+  controls.innerHTML = `
 
-    enemyBoatPosition +=
-      0.7 + Math.random() * 0.5;
+    <button
+      class="ctrl"
+      data-dir="-1"
+    >
+      ←
+    </button>
 
-    if (enemyBoatPosition > 90) {
-      enemyBoatPosition = 90;
-    }
+    <button
+      class="ctrl"
+      data-dir="1"
+    >
+      →
+    </button>
 
-    get("enemy-boat").style.left =
-      enemyBoatPosition + "%";
+  `;
 
-    if (enemyBoatPosition >= 85) {
 
-      showMessage(
-        "😱",
-        "The opponent is ahead!"
+  card.appendChild(controls);
+
+
+  const mobileControls =
+    document.createElement("div");
+
+
+  mobileControls.className =
+    "mobile-controls";
+
+
+  mobileControls.innerHTML = `
+
+    <button
+      class="ctrl"
+      data-dir="-1"
+    >
+      ←
+    </button>
+
+    <button
+      class="ctrl"
+      data-dir="1"
+    >
+      →
+    </button>
+
+  `;
+
+
+  card.appendChild(
+    mobileControls
+  );
+
+
+  state.boatX = 50;
+
+  state.boatObjects = [];
+
+
+  const player =
+    () =>
+      $("#boatPlayer");
+
+
+  const move = (direction) => {
+
+    state.boatX =
+      Math.max(
+        10,
+        Math.min(
+          90,
+          state.boatX +
+          direction * 7
+        )
       );
 
+
+    player().style.left =
+      state.boatX + "%";
+
+  };
+
+
+  card
+    .querySelectorAll("[data-dir]")
+    .forEach((button) => {
+
+      button.onpointerdown = () => {
+
+        move(
+          Number(
+            button.dataset.dir
+          )
+        );
+
+      };
+
+    });
+
+
+  document.onkeydown = (event) => {
+
+    if (
+      !screens.game.classList.contains(
+        "active"
+      )
+    ) {
+
+      return;
+
     }
 
-  }, 500);
 
-}
+    if (
+      [
+        "ArrowLeft",
+        "a",
+        "A"
+      ].includes(event.key)
+    ) {
+
+      move(-1);
+
+    }
 
 
-/* =========================================
-   ROW BOAT
-========================================= */
+    if (
+      [
+        "ArrowRight",
+        "d",
+        "D"
+      ].includes(event.key)
+    ) {
 
-function rowBoat() {
+      move(1);
 
-  if (
-    !get("boat-game").classList.contains("active")
-  ) {
-    return;
-  }
+    }
 
-  let points = 0;
+  };
 
-  let message = "";
 
-  /*
-    PERFECT ZONE:
-    approximately 55% - 70%
-  */
+  const spawn =
+    setInterval(() => {
 
-  if (
-    rhythmPosition >= 55 &&
-    rhythmPosition <= 70
-  ) {
+      const object =
+        document.createElement(
+          "div"
+        );
 
-    points = 100;
 
-    boatPosition += 9;
+      object.className =
+        "boat-object";
 
-    message = "🔥 PERFECT ROW! +100";
 
-    combo++;
+      const rock =
+        Math.random() < 0.32;
 
-  }
 
-  else if (
-    rhythmPosition >= 35 &&
-    rhythmPosition <= 85
-  ) {
+      object.textContent =
+        rock ? "🪨" : "🪙";
 
-    points = 50;
 
-    boatPosition += 5;
+      object.classList.toggle(
+        "boat-rock",
+        rock
+      );
 
-    message = "⭐ GOOD ROW! +50";
 
-    combo++;
+      object.style.left =
+        10 + Math.random() * 80 + "%";
 
-  }
 
-  else {
+      object.style.top =
+        "-45px";
 
-    points = 10;
 
-    boatPosition += 1;
+      wrap.appendChild(object);
 
-    combo = 0;
 
-    message = "😅 TOO EARLY! +10";
+      const item = {
 
-  }
+        el: object,
 
-  score += points;
+        y: -45,
 
-  boatScore += points;
+        x: parseFloat(
+          object.style.left
+        ),
 
-  boatPosition =
-    Math.min(88, boatPosition);
+        rock,
 
-  get("player-boat").style.left =
-    boatPosition + "%";
+        done: false
 
-  updateHUD();
+      };
 
-  showMessage(
-    message.includes("PERFECT") ? "🔥" : "⭐",
-    message
+
+      state.boatObjects.push(item);
+
+    }, 650);
+
+
+  const tick =
+    setInterval(() => {
+
+      state.boatObjects
+        .forEach((object) => {
+
+          object.y += 4.8;
+
+
+          object.el.style.top =
+            object.y + "px";
+
+
+          const hitY =
+            object.y > 300 &&
+            object.y < 355;
+
+
+          const distance =
+            Math.abs(
+              object.x -
+              state.boatX
+            );
+
+
+          if (
+            hitY &&
+            distance < 9 &&
+            !object.done
+          ) {
+
+            object.done = true;
+
+
+            object.el.remove();
+
+
+            if (object.rock) {
+
+              if (!mistake()) {
+
+                toast(
+                  "Rock hit! - life"
+                );
+
+              }
+
+            } else {
+
+              addXP(90);
+
+              beep(
+                720,
+                0.07
+              );
+
+              toast(
+                "Energy collected +XP"
+              );
+
+            }
+
+          }
+
+        });
+
+
+      state.boatObjects =
+        state.boatObjects.filter(
+          (object) =>
+            object.y < 430 &&
+            !object.done
+        );
+
+    }, 45);
+
+
+  const cleanup = () => {
+
+    clearInterval(spawn);
+
+    clearInterval(tick);
+
+  };
+
+
+  state.levelTimer =
+    cleanup;
+
+
+  startTimer(
+    35,
+    () => {
+
+      cleanup();
+
+      nextLevel();
+
+    }
   );
 
-  if (boatPosition >= 85) {
+}
 
-    finishBoatGame();
+
+// =====================================================
+// MISSION 3
+// ONAM HUNT
+// =====================================================
+
+function loadHunt(container) {
+
+  const card =
+    levelShell(
+      "ONAM HUNT",
+      "SEARCH // FOCUS",
+      "Find the five hidden festival objects. Avoid the decoys."
+    );
+
+
+  const area =
+    document.createElement("div");
+
+
+  area.className =
+    "hunt-area";
+
+
+  const targets = [
+    "🪔",
+    "🥥",
+    "🍌",
+    "🌴",
+    "🎋"
+  ];
+
+
+  const usedPositions = [];
+
+
+  state.huntFound = 0;
+
+
+  targets.forEach(
+    (item, index) => {
+
+      let x;
+      let y;
+
+
+      do {
+
+        x =
+          8 +
+          Math.random() *
+          84;
+
+
+        y =
+          10 +
+          Math.random() *
+          76;
+
+      } while (
+        usedPositions.some(
+          (position) =>
+            Math.abs(
+              position.x - x
+            ) < 13 &&
+            Math.abs(
+              position.y - y
+            ) < 13
+        )
+      );
+
+
+      usedPositions.push({
+        x,
+        y
+      });
+
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.className =
+        "hunt-item";
+
+
+      button.textContent =
+        item;
+
+
+      button.style.left =
+        x + "%";
+
+
+      button.style.top =
+        y + "%";
+
+
+      button.onclick = () => {
+
+        if (
+          button.classList.contains(
+            "found"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        button.classList.add(
+          "found"
+        );
+
+
+        state.huntFound++;
+
+
+        addXP(110);
+
+
+        beep(
+          600 + index * 80,
+          0.08
+        );
+
+
+        toast(
+          `${state.huntFound}/5 FOUND`
+        );
+
+
+        if (
+          state.huntFound === 5
+        ) {
+
+          setTimeout(
+            nextLevel,
+            800
+          );
+
+        }
+
+      };
+
+
+      area.appendChild(button);
+
+    }
+  );
+
+
+  // DECOYS
+
+  for (let i = 0; i < 3; i++) {
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+
+    button.className =
+      "hunt-item";
+
+
+    button.textContent =
+      "❌";
+
+
+    button.style.left =
+      5 + Math.random() * 88 + "%";
+
+
+    button.style.top =
+      8 + Math.random() * 80 + "%";
+
+
+    button.onclick = () => {
+
+      if (
+        button.classList.contains(
+          "found"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      button.classList.add(
+        "found"
+      );
+
+
+      mistake();
+
+
+      toast(
+        "Decoy! Combo reset"
+      );
+
+    };
+
+
+    area.appendChild(button);
 
   }
+
+
+  card.appendChild(area);
+
+
+  startTimer(
+    40,
+    () => {
+
+      toast(
+        "Hunt timed out."
+      );
+
+      loadLevel(2);
+
+    }
+  );
 
 }
 
 
-/* =========================================
-   FINISH BOAT GAME
-========================================= */
+// =====================================================
+// MISSION 4
+// MAHABALI'S CHOICE
+// =====================================================
 
-function finishBoatGame() {
-
-  clearInterval(timerInterval);
-
-  clearInterval(rhythmInterval);
-
-  clearInterval(boatInterval);
-
-  boatFinalScore = boatScore;
-
-  if (boatPosition >= 85) {
-
-    score += 250;
-
-    showMessage(
-      "🏆",
-      "VALLAM KALI WIN!"
-    );
-
-  }
-
-  else {
-
-    showMessage(
-      "🚣",
-      "Race Finished!"
-    );
-
-  }
-
-  updateHUD();
-
-  setTimeout(() => {
-
-    currentLevel = 2;
-
-    showLevelIntro();
-
-  }, 1500);
-
-}
-
-
-/* =========================================
-   LEVEL 3
-   SADYA
-========================================= */
-
-const dishes = [
+const questions = [
 
   {
-    name: "Rice",
-    emoji: "🍚",
-    key: "rice"
+    q:
+      "Which festival is celebrated with the grand flower carpet called a Pookkalam?",
+
+    a: [
+      "Onam",
+      "Vishu",
+      "Thrissur Pooram",
+      "Navaratri"
+    ],
+
+    c: 0
   },
 
-  {
-    name: "Sambar",
-    emoji: "🥣",
-    key: "sambar"
-  },
 
   {
-    name: "Avial",
-    emoji: "🥘",
-    key: "avial"
+    q:
+      "Vallam Kali is traditionally associated with what?",
+
+    a: [
+      "Snake boat races",
+      "Kite flying",
+      "Drum battles",
+      "Bull racing"
+    ],
+
+    c: 0
   },
 
-  {
-    name: "Thoran",
-    emoji: "🥗",
-    key: "thoran"
-  },
 
   {
-    name: "Banana",
-    emoji: "🍌",
-    key: "banana"
+    q:
+      "What is the traditional vegetarian feast served on banana leaves during Onam?",
+
+    a: [
+      "Sadya",
+      "Sadhya Roll",
+      "Thali",
+      "Kanji"
+    ],
+
+    c: 0
   },
 
+
   {
-    name: "Payasam",
-    emoji: "🍮",
-    key: "payasam"
+    q:
+      "The story of Onam is strongly associated with which legendary king?",
+
+    a: [
+      "Mahabali",
+      "Ashoka",
+      "Raja Raja Chola",
+      "Krishnadevaraya"
+    ],
+
+    c: 0
+  },
+
+
+  {
+    q:
+      "A modern way to keep Onam celebrations sustainable is to…",
+
+    a: [
+      "Use reusable decor",
+      "Increase plastic waste",
+      "Waste food",
+      "Avoid local flowers"
+    ],
+
+    c: 0
   }
 
 ];
 
 
-function startSadyaGame() {
+// =====================================================
+// CHOICE LEVEL
+// =====================================================
 
-  showScreen("sadya-game");
+function loadChoice(container) {
 
-  currentDishIndex = 0;
+  const card =
+    levelShell(
+      "MAHABALI'S CHOICE",
+      "CULTURE // LOGIC",
+      "Answer three rapid-fire questions. Accuracy keeps your combo alive."
+    );
 
-  sadyaScore = 0;
 
-  get("dishes-completed")
-    .textContent = "0";
+  let questionIndex = 0;
 
-  showNextDish();
 
-  startTimer(35, () => {
+  const box =
+    document.createElement(
+      "div"
+    );
 
-    finishSadyaGame();
+
+  box.className =
+    "question-box";
+
+
+  card.appendChild(box);
+
+
+  function renderQuestion() {
+
+    const question =
+      questions[
+        (state.mission +
+          questionIndex) %
+          questions.length
+      ];
+
+
+    box.innerHTML = `
+
+      <div class="eyebrow">
+        QUESTION
+        ${questionIndex + 1}
+        / 3
+      </div>
+
+      <h3>
+        ${question.q}
+      </h3>
+
+      <div class="answers"></div>
+
+    `;
+
+
+    question.a.forEach(
+      (answer, index) => {
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.className =
+          "answer";
+
+
+        button.textContent =
+          answer;
+
+
+        button.onclick = () => {
+
+          if (
+            index === question.c
+          ) {
+
+            button.classList.add(
+              "correct"
+            );
+
+
+            addXP(160);
+
+
+            beep(
+              650,
+              0.08
+            );
+
+
+            questionIndex++;
+
+
+            if (
+              questionIndex === 3
+            ) {
+
+              toast(
+                "ALL MEMORY FRAGMENTS RESTORED!"
+              );
+
+
+              setTimeout(
+                nextLevel,
+                800
+              );
+
+            } else {
+
+              setTimeout(
+                renderQuestion,
+                350
+              );
+
+            }
+
+          } else {
+
+            button.classList.add(
+              "wrong"
+            );
+
+
+            mistake();
+
+
+            toast(
+              "Incorrect — combo reset"
+            );
+
+          }
+
+        };
+
+
+        box
+          .querySelector(".answers")
+          .appendChild(button);
+
+      }
+    );
+
+  }
+
+
+  renderQuestion();
+
+
+  startTimer(
+    45,
+    () => {
+
+      toast(
+        "Choice mission timed out."
+      );
+
+      loadLevel(3);
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// FINISH GAME
+// =====================================================
+
+function finishGame() {
+
+  clearInterval(state.timer);
+
+
+  const score =
+    Math.floor(
+      state.xp +
+      Math.max(0, state.time) * 15 +
+      state.bestCombo * 50
+    );
+
+
+  state.finalScore =
+    score;
+
+
+  $("#finalScore").textContent =
+    String(score).padStart(
+      4,
+      "0"
+    );
+
+
+  $("#finalCombo").textContent =
+    "x" +
+    state.bestCombo;
+
+
+  let rank = "C";
+
+
+  if (score >= 5000) {
+
+    rank = "S";
+
+  } else if (score >= 3500) {
+
+    rank = "A";
+
+  } else if (score >= 2200) {
+
+    rank = "B";
+
+  }
+
+
+  $("#finalRank").textContent =
+    rank;
+
+
+  showScreen("final");
+
+
+  beep(880, 0.2);
+
+
+  setTimeout(() => {
+
+    beep(1100, 0.2);
+
+  }, 180);
+
+}
+
+
+// =====================================================
+// LEADERBOARD
+// =====================================================
+
+function getScores() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(
+        "onamExeScores"
+      ) || "[]"
+    );
+
+  } catch (error) {
+
+    return [];
+
+  }
+
+}
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHtml(text) {
+
+  return text.replace(
+    /[&<>"']/g,
+    (character) => {
+
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character];
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// RENDER LEADERBOARD
+// =====================================================
+
+function renderLeaderboard() {
+
+  const list =
+    $("#leaderboardList");
+
+
+  const scores =
+    getScores()
+      .sort(
+        (a, b) =>
+          b.score - a.score
+      )
+      .slice(0, 10);
+
+
+  if (!scores.length) {
+
+    list.innerHTML = `
+
+      <div class="empty">
+        No champions yet.
+        Be the first!
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    scores
+      .map(
+        (score, index) => `
+
+          <div class="leader-row">
+
+            <span class="rank">
+              #${index + 1}
+            </span>
+
+            <span class="name">
+              ${escapeHtml(
+                score.name
+              )}
+            </span>
+
+            <span class="score">
+              ${score.score}
+            </span>
+
+          </div>
+
+        `
+      )
+      .join("");
+
+}
+
+
+// =====================================================
+// START GAME
+// =====================================================
+
+$("#startBtn").onclick = () => {
+
+  showScreen("briefing");
+
+  beep(
+    500,
+    0.1
+  );
+
+};
+
+
+// =====================================================
+// BEGIN PROTOCOL
+// =====================================================
+
+$("#beginBtn").onclick = () => {
+
+  state = {
+
+    ...state,
+
+    mission: 0,
+
+    xp: 0,
+
+    combo: 1,
+
+    bestCombo: 1,
+
+    lives: 3
+
+  };
+
+
+  showScreen("game");
+
+
+  loadLevel(0);
+
+
+  beep(
+    600,
+    0.1
+  );
+
+};
+
+
+// =====================================================
+// LEADERBOARD BUTTON
+// =====================================================
+
+$("#leaderBtn").onclick = () => {
+
+  renderLeaderboard();
+
+  showScreen("leader");
+
+};
+
+
+// =====================================================
+// FINAL LEADERBOARD
+// =====================================================
+
+$("#finalLeaderBtn").onclick = () => {
+
+  renderLeaderboard();
+
+  showScreen("leader");
+
+};
+
+
+// =====================================================
+// CLOSE LEADERBOARD
+// =====================================================
+
+$("#closeLeaderBtn").onclick = () => {
+
+  showScreen("start");
+
+};
+
+
+// =====================================================
+// REPLAY
+// =====================================================
+
+$("#replayBtn").onclick = () => {
+
+  $("#playerName").value = "";
+
+  showScreen("briefing");
+
+};
+
+
+// =====================================================
+// SAVE SCORE
+// =====================================================
+
+$("#saveScoreBtn").onclick = () => {
+
+  const name =
+    (
+      $("#playerName")
+        .value
+        .trim() ||
+      "PLAYER"
+    ).slice(0, 14);
+
+
+  const scores =
+    getScores();
+
+
+  scores.push({
+
+    name: name,
+
+    score: state.finalScore
 
   });
 
-}
+
+  scores.sort(
+    (a, b) =>
+      b.score - a.score
+  );
 
 
-/* =========================================
-   SHOW NEXT DISH
-========================================= */
-
-function showNextDish() {
-
-  if (currentDishIndex >= dishes.length) {
-
-    finishSadyaGame();
-
-    return;
-  }
-
-  const dish =
-    dishes[currentDishIndex];
-
-  get("dish-question").textContent =
-    `"Where is the ${dish.name}?"`;
-
-}
+  localStorage.setItem(
+    "onamExeScores",
+    JSON.stringify(
+      scores.slice(0, 20)
+    )
+  );
 
 
-/* =========================================
-   SELECT DISH
-========================================= */
-
-function selectDish(selectedDish) {
-
-  if (
-    !get("sadya-game").classList.contains("active")
-  ) {
-    return;
-  }
-
-  const correctDish =
-    dishes[currentDishIndex];
-
-  if (
-    selectedDish === correctDish.key
-  ) {
-
-    combo++;
-
-    const points =
-      100 + (combo * 10);
-
-    score += points;
-
-    sadyaScore += points;
-
-    currentDishIndex++;
-
-    get("dishes-completed")
-      .textContent =
-      currentDishIndex;
-
-    showMessage(
-      "🍛",
-      `CORRECT! +${points}`
-    );
-
-    if (
-      currentDishIndex >= dishes.length
-    ) {
-
-      setTimeout(
-        finishSadyaGame,
-        700
-      );
-
-    }
-
-    else {
-
-      setTimeout(
-        showNextDish,
-        500
-      );
-
-    }
-
-  }
-
-  else {
-
-    lives--;
-
-    combo = 0;
-
-    score =
-      Math.max(
-        0,
-        score - 25
-      );
-
-    updateHUD();
-
-    showMessage(
-      "❌",
-      "Wrong dish! -25"
-    );
-
-    if (lives <= 0) {
-
-      finishSadyaGame();
-
-    }
-
-  }
-
-}
+  toast(
+    "Score saved to the Hall of Fame!"
+  );
 
 
-/* =========================================
-   FINISH SADYA
-========================================= */
+  renderLeaderboard();
 
-function finishSadyaGame() {
-
-  clearInterval(timerInterval);
-
-  sadyaFinalScore = sadyaScore;
 
   setTimeout(() => {
 
-    showResult();
+    showScreen("leader");
 
-  }, 800);
+  }, 500);
 
-}
+};
 
 
-/* =========================================
-   FINAL RESULT
-========================================= */
+// =====================================================
+// SOUND BUTTON
+// =====================================================
 
-function showResult() {
+$("#soundBtn").onclick = () => {
 
-  clearAllIntervals();
+  state.sound =
+    !state.sound;
 
-  get("game-hud")
-    .classList.remove("show");
 
-  get("final-score")
-    .textContent = score;
+  $("#soundBtn").textContent =
+    state.sound
+      ? "🔊"
+      : "🔇";
 
-  get("flower-final-score")
-    .textContent = flowerFinalScore;
 
-  get("boat-final-score")
-    .textContent = boatFinalScore;
+  if (state.sound) {
 
-  get("sadya-final-score")
-    .textContent = sadyaFinalScore;
-
-  let rating = "";
-
-  if (score >= 2500) {
-
-    rating =
-      "🏆 ONAM LEGEND!";
+    beep(
+      500,
+      0.08
+    );
 
   }
 
-  else if (score >= 1800) {
-
-    rating =
-      "🥇 ONAM CHAMPION!";
-
-  }
-
-  else if (score >= 1000) {
-
-    rating =
-      "🥈 GREAT ONAM HERO!";
-
-  }
-
-  else {
-
-    rating =
-      "🌼 ONAM HERO!";
-
-  }
-
-  get("rating").textContent =
-    rating;
-
-  showScreen("result-screen");
-
-}
+};
 
 
-/* =========================================
-   MESSAGE
-========================================= */
+// =====================================================
+// HELP MODAL
+// =====================================================
 
-function showMessage(
-  icon,
-  text
-) {
+$("#helpBtn").onclick = () => {
 
-  const popup =
-    get("message-popup");
+  $("#helpModal")
+    .classList
+    .remove("hidden");
 
-  get("message-icon")
-    .textContent = icon;
-
-  get("message-text")
-    .textContent = text;
-
-  popup.classList.add("show");
-
-  setTimeout(() => {
-
-    popup.classList.remove("show");
-
-  }, 900);
-
-}
+};
 
 
-/* =========================================
-   RESTART
-========================================= */
+$("#closeHelp").onclick = () => {
 
-function restartGame() {
+  $("#helpModal")
+    .classList
+    .add("hidden");
 
-  clearAllIntervals();
-
-  get("game-hud")
-    .classList.remove("show");
-
-  startGame();
-
-}
+};
 
 
-/* =========================================
-   CLEAR INTERVALS
-========================================= */
+$("#helpModal").onclick = (
+  event
+) => {
 
-function clearAllIntervals() {
+  if (
+    event.target.id ===
+    "helpModal"
+  ) {
 
-  clearInterval(timerInterval);
-
-  clearInterval(flowerInterval);
-
-  clearInterval(boatInterval);
-
-  clearInterval(rhythmInterval);
-
-  timerInterval = null;
-
-  flowerInterval = null;
-
-  boatInterval = null;
-
-  rhythmInterval = null;
-
-}
-
-
-/* =========================================
-   INITIALIZATION
-========================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    updateHUD();
+    $("#helpModal")
+      .classList
+      .add("hidden");
 
   }
-);
+
+};
+
+
+// =====================================================
+// INITIAL HUD
+// =====================================================
+
+updateHud();
