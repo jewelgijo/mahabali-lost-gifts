@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Mahabali's Lost Gifts | ONAM.exe</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- =========================
+       BACKGROUND DECORATIONS
+  ========================== -->
+
+  <div class="floating-flower flower-one">🌼</div>
+  <div class="floating-flower flower-two">🌸</div>
+  <div class="floating-flower flower-three">🌺</div>
+  <div class="floating-flower flower-four">🌻</div>
+
+  <!-- =========================
+       GAME CONTAINER
+  ========================== -->
+
+  <main class="game-container">
+
+    <!-- =========================
+         HOME SCREEN
+    ========================== -->
+
+    <section id="home-screen" class="screen active">
+
+      <div class="onam-top">
+
+        <div class="coconut-tree left-tree">🌴</div>
+
+        <div class="festival-badge">
+          🌼 ONAM.EXE 🌼
+        </div>
+
+        <div class="coconut-tree right-tree">🌴</div>
+
+      </div>
+
+      <div class="home-content">
+
+        <div class="mahbali-icon">
+          👑
+        </div>
+
+        <p class="small-title">
+          A Kerala Onam Adventure
+        </p>
+
+        <h1>
+          MAHABALI'S
+          <span>LOST GIFTS</span>
+        </h1>
+
+        <p class="story-text">
+          King Mahabali is returning to Kerala for Onam...
+          but his precious gifts have been scattered!
+        </p>
+
+        <div class="mission-card">
+
+          <div class="mission-title">
+            👑 YOUR MISSION
+          </div>
+
+          <p>
+            Help Mahabali recover all his lost gifts
+            before the grand Onam celebration begins!
+          </p>
+
+          <div class="mission-items">
+            <span>🌸</span>
+            <span>🚣</span>
+            <span>🍛</span>
+            <span>🎁</span>
+          </div>
+
+        </div>
+
+        <button
+          id="start-button"
+          class="main-button"
+          onclick="startGame()"
+        >
+          START QUEST
+          <span>→</span>
+        </button>
+
+        <p class="controls-info">
+          🎮 Mouse / Keyboard controls supported
+        </p>
+
+      </div>
+
+      <div class="home-bottom">
+
+        <div class="pookalam-decoration">
+          🌼 🌸 🌺 🌼 🌸 🌺 🌼
+        </div>
+
+        <p>
+          "Where tradition becomes a game,
+          and every game tells a story."
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         LEVEL INTRO
+    ========================== -->
+
+    <section id="level-intro-screen" class="screen">
+
+      <div class="level-intro-card">
+
+        <div id="level-icon" class="big-level-icon">
+          🌸
+        </div>
+
+        <p class="level-number">
+          LEVEL 1
+        </p>
+
+        <h2 id="level-title">
+          FIND THE FLOWERS
+        </h2>
+
+        <p id="level-description">
+          Collect flowers for Mahabali's Pookalam!
+        </p>
+
+        <div class="instruction-box">
+
+          <h3>HOW TO PLAY</h3>
+
+          <p id="level-instruction">
+            Move your basket and catch the falling flowers.
+          </p>
+
+        </div>
+
+        <button
+          class="main-button"
+          onclick="beginCurrentLevel()"
+        >
+          LET'S GO! 🚀
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         GAME HUD
+    ========================== -->
+
+    <div id="game-hud" class="game-hud">
+
+      <div class="hud-item">
+        <span>⭐</span>
+        <div>
+          <small>SCORE</small>
+          <strong id="score">0</strong>
+        </div>
+      </div>
+
+      <div class="hud-item">
+        <span>❤️</span>
+        <div>
+          <small>LIVES</small>
+          <strong id="lives">❤️❤️❤️</strong>
+        </div>
+      </div>
+
+      <div class="hud-item">
+        <span>⏱️</span>
+        <div>
+          <small>TIME</small>
+          <strong id="timer">30</strong>
+        </div>
+      </div>
+
+      <div class="hud-item">
+        <span>🔥</span>
+        <div>
+          <small>COMBO</small>
+          <strong id="combo">0</strong>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         LEVEL 1
+         FLOWER GAME
+    ========================== -->
+
+    <section id="flower-game" class="screen game-screen">
+
+      <div class="game-header">
+
+        <div>
+          <span class="level-tag">
+            LEVEL 1
+          </span>
+
+          <h2>
+            🌸 Pookalam Rush
+          </h2>
+        </div>
+
+        <div class="goal">
+          Flowers:
+          <strong>
+            <span id="flowers-collected">0</span>/15
+          </strong>
+        </div>
+
+      </div>
+
+      <div
+        id="flower-area"
+        class="flower-area"
+      >
+
+        <div class="sky-decoration">
+          ☁️
+        </div>
+
+        <div class="sun">
+          ☀️
+        </div>
+
+        <div
+          id="basket"
+          class="basket"
+        >
+          🧺
+        </div>
+
+      </div>
+
+      <div class="game-controls">
+
+        <button onclick="moveBasket('left')">
+          ◀
+        </button>
+
+        <p>
+          Use <b>← →</b> or <b>A D</b> to move
+        </p>
+
+        <button onclick="moveBasket('right')">
+          ▶
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         LEVEL 2
+         BOAT GAME
+    ========================== -->
+
+    <section id="boat-game" class="screen game-screen">
+
+      <div class="game-header">
+
+        <div>
+          <span class="level-tag">
+            LEVEL 2
+          </span>
+
+          <h2>
+            🚣 Vallam Kali
+          </h2>
+        </div>
+
+        <div class="goal">
+          Reach:
+          <strong>🏁</strong>
+        </div>
+
+      </div>
+
+      <div class="boat-area">
+
+        <div class="boat-cloud cloud-one">
+          ☁️
+        </div>
+
+        <div class="boat-cloud cloud-two">
+          ☁️
+        </div>
+
+        <div class="finish-line">
+          🏁
+        </div>
+
+        <div
+          id="player-boat"
+          class="player-boat"
+        >
+          🚣
+        </div>
+
+        <div
+          id="enemy-boat"
+          class="enemy-boat"
+        >
+          🚣
+        </div>
+
+        <div class="water-line">
+          ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+        </div>
+
+      </div>
+
+      <div class="rhythm-section">
+
+        <h3>
+          🥁 ROW WITH THE RHYTHM!
+        </h3>
+
+        <div class="rhythm-bar">
+
+          <div class="rhythm-zone bad-zone">
+            BAD
+          </div>
+
+          <div class="rhythm-zone good-zone">
+            GOOD
+          </div>
+
+          <div class="rhythm-zone perfect-zone">
+            PERFECT
+          </div>
+
+          <div
+            id="rhythm-marker"
+            class="rhythm-marker"
+          ></div>
+
+        </div>
+
+        <button
+          id="row-button"
+          class="row-button"
+          onclick="rowBoat()"
+        >
+          🥁 ROW!
+        </button>
+
+        <p>
+          Press <b>SPACE</b> or click ROW when the marker reaches PERFECT!
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         LEVEL 3
+         SADYA GAME
+    ========================== -->
+
+    <section id="sadya-game" class="screen game-screen">
+
+      <div class="game-header">
+
+        <div>
+          <span class="level-tag">
+            LEVEL 3
+          </span>
+
+          <h2>
+            🍛 Sadya Master
+          </h2>
+        </div>
+
+        <div class="goal">
+          Dishes:
+          <strong>
+            <span id="dishes-completed">0</span>/6
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="sadya-content">
+
+        <div class="sadya-instruction">
+
+          <p>
+            👑 Mahabali says:
+          </p>
+
+          <h3 id="dish-question">
+            "Where is the Rice?"
+          </h3>
+
+          <p>
+            Click the correct dish!
+          </p>
+
+        </div>
+
+        <div class="banana-leaf">
+
+          <div class="leaf-veins"></div>
+
+          <div
+            class="dish-slot slot-1"
+            data-dish="rice"
+            onclick="selectDish('rice')"
+          >
+            🍚
+            <small>Rice</small>
+          </div>
+
+          <div
+            class="dish-slot slot-2"
+            data-dish="sambar"
+            onclick="selectDish('sambar')"
+          >
+            🥣
+            <small>Sambar</small>
+          </div>
+
+          <div
+            class="dish-slot slot-3"
+            data-dish="avial"
+            onclick="selectDish('avial')"
+          >
+            🥘
+            <small>Avial</small>
+          </div>
+
+          <div
+            class="dish-slot slot-4"
+            data-dish="thoran"
+            onclick="selectDish('thoran')"
+          >
+            🥗
+            <small>Thoran</small>
+          </div>
+
+          <div
+            class="dish-slot slot-5"
+            data-dish="banana"
+            onclick="selectDish('banana')"
+          >
+            🍌
+            <small>Banana</small>
+          </div>
+
+          <div
+            class="dish-slot slot-6"
+            data-dish="payasam"
+            onclick="selectDish('payasam')"
+          >
+            🍮
+            <small>Payasam</small>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         RESULT SCREEN
+    ========================== -->
+
+    <section id="result-screen" class="screen">
+
+      <div class="result-card">
+
+        <div class="victory-crown">
+          👑
+        </div>
+
+        <p class="victory-text">
+          QUEST COMPLETE!
+        </p>
+
+        <h1>
+          ONAM
+          <span>HERO</span>
+        </h1>
+
+        <p class="mahabali-message">
+          "You found all my lost gifts!
+          Kerala is ready for Onam!"
+        </p>
+
+        <div class="final-score-box">
+
+          <p>
+            YOUR FINAL SCORE
+          </p>
+
+          <strong id="final-score">
+            0
+          </strong>
+
+          <span>
+            ⭐ POINTS
+          </span>
+
+        </div>
+
+        <div class="score-breakdown">
+
+          <div>
+            <span>🌸 Pookalam</span>
+            <strong id="flower-final-score">
+              0
+            </strong>
+          </div>
+
+          <div>
+            <span>🚣 Vallam Kali</span>
+            <strong id="boat-final-score">
+              0
+            </strong>
+          </div>
+
+          <div>
+            <span>🍛 Sadya</span>
+            <strong id="sadya-final-score">
+              0
+            </strong>
+          </div>
+
+        </div>
+
+        <div id="rating" class="rating">
+          🏆 ONAM CHAMPION!
+        </div>
+
+        <button
+          class="main-button"
+          onclick="restartGame()"
+        >
+          PLAY AGAIN 🔄
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =========================
+       MESSAGE POPUP
+  ========================== -->
+
+  <div
+    id="message-popup"
+    class="message-popup"
+  >
+    <span id="message-icon">⭐</span>
+    <span id="message-text">Great!</span>
+  </div>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>

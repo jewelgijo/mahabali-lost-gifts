@@ -1,0 +1,1007 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --green: #477d2b;
+  --dark-green: #28521b;
+  --gold: #e5a51b;
+  --orange: #e77821;
+  --cream: #fff8e7;
+  --brown: #63351e;
+  --red: #c94228;
+}
+
+body {
+  min-height: 100vh;
+  font-family: "Baloo 2", cursive;
+  background:
+    radial-gradient(circle at top, #fff7dd 0%, #f7dfae 45%, #d5a95d 100%);
+  color: var(--brown);
+  overflow-x: hidden;
+}
+
+
+/* =========================
+   BACKGROUND
+========================= */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(#ffffff55 2px, transparent 2px);
+  background-size: 35px 35px;
+  opacity: 0.5;
+}
+
+.floating-flower {
+  position: fixed;
+  font-size: 40px;
+  opacity: 0.4;
+  animation: float 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.flower-one {
+  top: 8%;
+  left: 5%;
+}
+
+.flower-two {
+  top: 20%;
+  right: 7%;
+  animation-delay: 1s;
+}
+
+.flower-three {
+  bottom: 20%;
+  left: 7%;
+  animation-delay: 2s;
+}
+
+.flower-four {
+  bottom: 10%;
+  right: 5%;
+  animation-delay: 1.5s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0);
+  }
+
+  50% {
+    transform: translateY(-15px) rotate(8deg);
+  }
+}
+
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+
+.game-container {
+  width: min(1100px, 94%);
+  min-height: 90vh;
+  margin: 30px auto;
+  background: var(--cream);
+  border: 6px solid #e8b94c;
+  border-radius: 35px;
+  box-shadow:
+    0 20px 60px rgba(80, 40, 10, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* =========================
+   SCREENS
+========================= */
+
+.screen {
+  display: none;
+  min-height: 85vh;
+  position: relative;
+}
+
+.screen.active {
+  display: block;
+}
+
+
+/* =========================
+   HOME
+========================= */
+
+.onam-top {
+  height: 90px;
+  background: linear-gradient(
+    90deg,
+    #4d8b2f,
+    #6da43b,
+    #4d8b2f
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.festival-badge {
+  background: #fff5ce;
+  color: var(--green);
+  padding: 10px 35px;
+  border-radius: 30px;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  border: 3px solid #e5b42e;
+}
+
+.coconut-tree {
+  position: absolute;
+  font-size: 70px;
+}
+
+.left-tree {
+  left: 25px;
+}
+
+.right-tree {
+  right: 25px;
+  transform: scaleX(-1);
+}
+
+.home-content {
+  text-align: center;
+  max-width: 800px;
+  margin: 20px auto 0;
+  padding: 10px 25px 30px;
+}
+
+.mahbali-icon {
+  font-size: 85px;
+  animation: crownFloat 2s infinite ease-in-out;
+}
+
+@keyframes crownFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.small-title {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+h1 {
+  font-family: "Fredoka", sans-serif;
+  font-size: clamp(50px, 8vw, 90px);
+  line-height: 0.9;
+  color: #43250d;
+  letter-spacing: 3px;
+  margin: 8px 0 20px;
+}
+
+h1 span {
+  display: block;
+  color: var(--orange);
+}
+
+.story-text {
+  max-width: 650px;
+  margin: auto;
+  font-size: 21px;
+  line-height: 1.5;
+}
+
+.mission-card {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff0c7;
+  border: 3px dashed #d49a32;
+  border-radius: 20px;
+}
+
+.mission-title {
+  color: var(--green);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.mission-card p {
+  font-size: 18px;
+  margin: 7px 0;
+}
+
+.mission-items {
+  font-size: 35px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+}
+
+.main-button {
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(
+    135deg,
+    #e5a51b,
+    #e77821
+  );
+  color: white;
+  padding: 15px 35px;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 8px 0 #a95017;
+  transition: 0.15s;
+}
+
+.main-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 11px 0 #a95017;
+}
+
+.main-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0 #a95017;
+}
+
+.controls-info {
+  margin-top: 18px;
+  color: #84634c;
+}
+
+.home-bottom {
+  background: #497e2c;
+  color: white;
+  text-align: center;
+  padding: 15px;
+}
+
+.home-bottom p {
+  font-size: 17px;
+  font-style: italic;
+}
+
+
+/* =========================
+   LEVEL INTRO
+========================= */
+
+#level-intro-screen {
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+#level-intro-screen.active {
+  display: flex;
+}
+
+.level-intro-card {
+  width: min(650px, 100%);
+  text-align: center;
+  background: #fff3cf;
+  padding: 45px;
+  border: 4px solid #e3ad32;
+  border-radius: 30px;
+  box-shadow: 0 15px 30px #8d5c2930;
+}
+
+.big-level-icon {
+  font-size: 80px;
+}
+
+.level-number {
+  color: var(--orange);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.level-intro-card h2 {
+  font-family: Fredoka, sans-serif;
+  color: var(--green);
+  font-size: 45px;
+}
+
+.level-intro-card > p {
+  font-size: 20px;
+}
+
+.instruction-box {
+  background: white;
+  margin: 25px 0;
+  padding: 20px;
+  border-radius: 18px;
+}
+
+.instruction-box h3 {
+  color: var(--orange);
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+.game-hud {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: #fff8df;
+  border: 3px solid #d89b27;
+  border-radius: 50px;
+  padding: 8px 15px;
+  gap: 25px;
+  box-shadow: 0 7px 20px #5e391933;
+}
+
+.game-hud.show {
+  display: flex;
+}
+
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hud-item > span {
+  font-size: 25px;
+}
+
+.hud-item small {
+  display: block;
+  font-size: 10px;
+  color: #8c6b50;
+  font-weight: 800;
+}
+
+.hud-item strong {
+  font-size: 17px;
+}
+
+
+/* =========================
+   GAME SCREEN
+========================= */
+
+.game-screen {
+  padding: 40px 35px;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.game-header h2 {
+  color: var(--green);
+  font-family: Fredoka;
+  font-size: 35px;
+}
+
+.level-tag {
+  background: var(--orange);
+  color: white;
+  border-radius: 20px;
+  padding: 4px 15px;
+  font-weight: 800;
+}
+
+.goal {
+  background: #fff0c4;
+  padding: 10px 20px;
+  border-radius: 15px;
+}
+
+
+/* =========================
+   FLOWER GAME
+========================= */
+
+.flower-area {
+  height: 55vh;
+  min-height: 400px;
+  max-height: 600px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 25px;
+  border: 5px solid #4c832f;
+  background:
+    linear-gradient(
+      #8ed7ed 0%,
+      #bcebf2 65%,
+      #6ca548 65%,
+      #427d2d 100%
+    );
+}
+
+.sun {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  font-size: 50px;
+}
+
+.sky-decoration {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  font-size: 60px;
+  opacity: 0.7;
+}
+
+.basket {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 70px;
+  cursor: pointer;
+  user-select: none;
+  transition: left 0.1s;
+  z-index: 10;
+}
+
+.falling-flower {
+  position: absolute;
+  font-size: 40px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 5;
+  animation: flowerSpin 2s linear infinite;
+}
+
+@keyframes flowerSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.game-controls button {
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background: var(--green);
+  color: white;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.game-controls p {
+  font-size: 17px;
+}
+
+
+/* =========================
+   BOAT GAME
+========================= */
+
+.boat-area {
+  height: 45vh;
+  min-height: 350px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 25px;
+  background:
+    linear-gradient(
+      #83d5e8 0%,
+      #b8ebf2 35%,
+      #358fc1 35%,
+      #1775a9 100%
+    );
+  border: 5px solid #3e7c9c;
+}
+
+.boat-cloud {
+  position: absolute;
+  font-size: 50px;
+}
+
+.cloud-one {
+  top: 30px;
+  left: 10%;
+}
+
+.cloud-two {
+  top: 80px;
+  right: 20%;
+}
+
+.finish-line {
+  position: absolute;
+  right: 30px;
+  top: 48%;
+  font-size: 70px;
+}
+
+.player-boat,
+.enemy-boat {
+  position: absolute;
+  font-size: 60px;
+  left: 5%;
+  transition: left 0.2s ease;
+}
+
+.player-boat {
+  top: 30%;
+}
+
+.enemy-boat {
+  top: 60%;
+  filter: grayscale(0.3);
+}
+
+.water-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 48%;
+  font-size: 25px;
+  color: #b9efff;
+}
+
+.rhythm-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.rhythm-section h3 {
+  color: var(--green);
+  font-size: 23px;
+}
+
+.rhythm-bar {
+  width: min(700px, 90%);
+  height: 45px;
+  display: flex;
+  margin: 15px auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  border: 3px solid #754323;
+}
+
+.rhythm-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.bad-zone {
+  background: #e8907c;
+}
+
+.good-zone {
+  background: #f4d374;
+}
+
+.perfect-zone {
+  background: #6dbd69;
+}
+
+.rhythm-marker {
+  position: absolute;
+  width: 5px;
+  top: 0;
+  bottom: 0;
+  background: #43250d;
+  left: 0;
+}
+
+.row-button {
+  border: none;
+  padding: 13px 35px;
+  background: var(--green);
+  color: white;
+  border-radius: 30px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rhythm-section p {
+  margin-top: 10px;
+}
+
+
+/* =========================
+   SADYA
+========================= */
+
+.sadya-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sadya-instruction {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.sadya-instruction p {
+  font-size: 17px;
+}
+
+.sadya-instruction h3 {
+  font-size: 28px;
+  color: var(--orange);
+}
+
+.banana-leaf {
+  width: min(800px, 95%);
+  height: 400px;
+  position: relative;
+  background:
+    radial-gradient(
+      ellipse at center,
+      #7db94b,
+      #498b31
+    );
+  border-radius: 50% 10% 50% 10%;
+  border: 8px solid #356d26;
+  box-shadow: inset 0 0 40px #244b1b55;
+}
+
+.leaf-veins {
+  position: absolute;
+  width: 100%;
+  height: 5px;
+  background: #326526;
+  top: 50%;
+  transform: rotate(-3deg);
+}
+
+.dish-slot {
+  position: absolute;
+  width: 100px;
+  height: 90px;
+  background: #fff5d8;
+  border-radius: 20px;
+  border: 3px solid #d8a438;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 38px;
+  transition: 0.2s;
+}
+
+.dish-slot small {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dish-slot:hover {
+  transform: scale(1.1);
+}
+
+.slot-1 {
+  left: 8%;
+  top: 12%;
+}
+
+.slot-2 {
+  left: 31%;
+  top: 8%;
+}
+
+.slot-3 {
+  left: 56%;
+  top: 10%;
+}
+
+.slot-4 {
+  left: 77%;
+  top: 20%;
+}
+
+.slot-5 {
+  left: 18%;
+  bottom: 10%;
+}
+
+.slot-6 {
+  right: 20%;
+  bottom: 10%;
+}
+
+
+/* =========================
+   RESULT
+========================= */
+
+#result-screen {
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+#result-screen.active {
+  display: flex;
+}
+
+.result-card {
+  width: min(650px, 100%);
+  text-align: center;
+  padding: 40px;
+  background: #fff1c9;
+  border: 4px solid #dda832;
+  border-radius: 30px;
+}
+
+.victory-crown {
+  font-size: 80px;
+  animation: crownFloat 2s infinite;
+}
+
+.victory-text {
+  color: var(--orange);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.result-card h1 {
+  font-size: 60px;
+  margin: 5px 0 15px;
+}
+
+.mahabali-message {
+  font-size: 19px;
+  font-style: italic;
+}
+
+.final-score-box {
+  background: white;
+  margin: 20px auto;
+  padding: 15px;
+  border-radius: 20px;
+  width: 80%;
+}
+
+.final-score-box p {
+  color: #896d50;
+  font-weight: 700;
+}
+
+.final-score-box strong {
+  display: block;
+  font-size: 55px;
+  color: var(--green);
+}
+
+.final-score-box span {
+  font-weight: 800;
+}
+
+.score-breakdown {
+  background: #fff8e8;
+  border-radius: 18px;
+  padding: 12px 20px;
+  margin: 20px auto;
+}
+
+.score-breakdown div {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px;
+  border-bottom: 1px dashed #cba76a;
+  font-size: 17px;
+}
+
+.score-breakdown div:last-child {
+  border-bottom: none;
+}
+
+.rating {
+  font-size: 25px;
+  color: var(--orange);
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+
+/* =========================
+   POPUP
+========================= */
+
+.message-popup {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  background: #fff3cb;
+  border: 3px solid #e1a42a;
+  padding: 10px 25px;
+  border-radius: 30px;
+  font-size: 20px;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.3s;
+  z-index: 200;
+}
+
+.message-popup.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+  .game-container {
+    width: 96%;
+    margin: 10px auto;
+    border-width: 3px;
+    border-radius: 20px;
+  }
+
+  .onam-top {
+    height: 70px;
+  }
+
+  .festival-badge {
+    font-size: 17px;
+    padding: 7px 18px;
+  }
+
+  .coconut-tree {
+    font-size: 45px;
+  }
+
+  .left-tree {
+    left: 5px;
+  }
+
+  .right-tree {
+    right: 5px;
+  }
+
+  .home-content {
+    padding: 15px;
+  }
+
+  .mahbali-icon {
+    font-size: 60px;
+  }
+
+  h1 {
+    font-size: 48px;
+  }
+
+  .story-text {
+    font-size: 17px;
+  }
+
+  .game-hud {
+    gap: 8px;
+    padding: 6px 8px;
+    width: 95%;
+    justify-content: space-around;
+  }
+
+  .hud-item > span {
+    font-size: 18px;
+  }
+
+  .hud-item strong {
+    font-size: 13px;
+  }
+
+  .game-screen {
+    padding: 25px 12px;
+  }
+
+  .game-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .game-header h2 {
+    font-size: 28px;
+  }
+
+  .flower-area {
+    min-height: 400px;
+  }
+
+  .level-intro-card {
+    padding: 25px 15px;
+  }
+
+  .level-intro-card h2 {
+    font-size: 34px;
+  }
+
+  .banana-leaf {
+    height: 450px;
+  }
+
+  .dish-slot {
+    width: 75px;
+    height: 70px;
+    font-size: 28px;
+  }
+
+  .dish-slot small {
+    font-size: 10px;
+  }
+
+  .slot-1 {
+    left: 5%;
+  }
+
+  .slot-2 {
+    left: 35%;
+  }
+
+  .slot-3 {
+    right: 5%;
+    left: auto;
+  }
+
+  .slot-4 {
+    left: 12%;
+    top: 48%;
+  }
+
+  .slot-5 {
+    left: 45%;
+    bottom: 10%;
+  }
+
+  .slot-6 {
+    right: 10%;
+    bottom: 35%;
+  }
+
+  .result-card {
+    padding: 25px 15px;
+  }
+}
