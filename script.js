@@ -1,6 +1,9 @@
-const $ = (selector) =>
-  document.querySelector(selector);
+// =====================================================
+// MAHABALI.exe
+// ONAM MEMORY // REFLEX // CULTURE CHALLENGE
+// =====================================================
 
+const $ = selector => document.querySelector(selector)
 
 // =====================================================
 // SCREEN REFERENCES
@@ -12,47 +15,32 @@ const screens = {
   game: $("#gameScreen"),
   final: $("#finalScreen"),
   leader: $("#leaderScreen"),
-};
-
+}
 
 // =====================================================
 // GAME STATE
 // =====================================================
 
 let state = {
-
   mission: 0,
-
   xp: 0,
-
   combo: 1,
-
   bestCombo: 1,
-
   lives: 3,
-
   time: 45,
-
   timer: null,
-
   levelTimer: null,
-
   sound: true,
 
   boatX: 50,
-
   boatObjects: [],
 
   huntFound: 0,
-
   pookPattern: [],
-
   pookSelected: [],
 
-  finalScore: 0
-
-};
-
+  finalScore: 0,
+}
 
 // =====================================================
 // SOUND
@@ -61,430 +49,375 @@ let state = {
 function beep(
   frequency = 440,
   duration = 0.08,
-  type = "sine"
+  type = "sine",
 ) {
-
-  if (!state.sound) {
-    return;
-  }
+  if (!state.sound) return
 
   try {
-
     const AudioContext =
       window.AudioContext ||
-      window.webkitAudioContext;
+      window.webkitAudioContext
 
     const ctx =
       beep.ctx ||
-      (beep.ctx = new AudioContext());
+      (beep.ctx = new AudioContext())
 
     const oscillator =
-      ctx.createOscillator();
+      ctx.createOscillator()
 
     const gain =
-      ctx.createGain();
+      ctx.createGain()
 
-    oscillator.type = type;
-
-    oscillator.frequency.value =
-      frequency;
+    oscillator.type = type
+    oscillator.frequency.value = frequency
 
     gain.gain.setValueAtTime(
       0.045,
-      ctx.currentTime
-    );
+      ctx.currentTime,
+    )
 
     gain.gain.exponentialRampToValueAtTime(
       0.001,
-      ctx.currentTime + duration
-    );
+      ctx.currentTime + duration,
+    )
 
-    oscillator.connect(gain);
+    oscillator.connect(gain)
+    gain.connect(ctx.destination)
 
-    gain.connect(ctx.destination);
-
-    oscillator.start();
+    oscillator.start()
 
     oscillator.stop(
-      ctx.currentTime + duration
-    );
-
+      ctx.currentTime + duration,
+    )
   } catch (error) {
-
-    console.log("Audio unavailable");
-
+    console.log("Audio unavailable")
   }
-
 }
-
 
 // =====================================================
 // TOAST
 // =====================================================
 
 function toast(message) {
+  const element = $("#toast")
 
-  const element = $("#toast");
+  if (!element) return
 
-  element.textContent = message;
-
-  element.classList.add("show");
+  element.textContent = message
+  element.classList.add("show")
 
   setTimeout(() => {
-
-    element.classList.remove("show");
-
-  }, 1800);
-
+    element.classList.remove("show")
+  }, 1800)
 }
-
 
 // =====================================================
 // SCREEN NAVIGATION
 // =====================================================
 
 function showScreen(name) {
+  Object.values(screens).forEach(screen => {
+    if (screen) {
+      screen.classList.remove("active")
+    }
+  })
 
-  Object
-    .values(screens)
-    .forEach((screen) => {
+  if (screens[name]) {
+    screens[name].classList.add("active")
+  }
 
-      screen.classList.remove("active");
-
-    });
-
-  screens[name].classList.add("active");
-
-  window.scrollTo(0, 0);
-
+  window.scrollTo(0, 0)
 }
-
 
 // =====================================================
 // HUD
 // =====================================================
 
 function updateHud() {
+  const missionNumber = $("#missionNumber")
+  const xpText = $("#xpText")
+  const comboText = $("#comboText")
+  const livesText = $("#livesText")
+  const timerText = $("#timerText")
+  const xpBar = $("#xpBar")
 
-  $("#missionNumber").textContent =
-    `${String(state.mission + 1).padStart(2, "0")} / 04`;
+  if (missionNumber) {
+    missionNumber.textContent =
+      `${String(state.mission + 1).padStart(2, "0")} / 04`
+  }
 
+  if (xpText) {
+    xpText.textContent =
+      String(Math.floor(state.xp)).padStart(4, "0")
+  }
 
-  $("#xpText").textContent =
-    String(Math.floor(state.xp)).padStart(4, "0");
+  if (comboText) {
+    comboText.textContent =
+      `x${state.combo}`
+  }
 
+  if (livesText) {
+    livesText.textContent =
+      "♥ ".repeat(Math.max(0, state.lives)).trim() +
+      (state.lives > 0 ? "" : "—")
+  }
 
-  $("#comboText").textContent =
-    `x${state.combo}`;
+  if (timerText) {
+    timerText.textContent =
+      `00:${String(
+        Math.max(0, state.time),
+      ).padStart(2, "0")}`
+  }
 
-
-  $("#livesText").textContent =
-    "♥ ".repeat(state.lives).trim() +
-    (state.lives ? "" : "—");
-
-
-  $("#timerText").textContent =
-    `00:${String(
-      Math.max(0, state.time)
-    ).padStart(2, "0")}`;
-
-
-  $("#xpBar").style.width =
-    Math.min(
-      100,
-      (state.xp % 1000) / 10
-    ) + "%";
-
+  if (xpBar) {
+    xpBar.style.width =
+      Math.min(
+        100,
+        (state.xp % 1000) / 10,
+      ) + "%"
+  }
 }
-
 
 // =====================================================
 // TIMER
 // =====================================================
 
 function startTimer(seconds, onEnd) {
+  clearInterval(state.timer)
 
-  clearInterval(state.timer);
-
-  state.time = seconds;
-
-  updateHud();
-
+  state.time = seconds
+  updateHud()
 
   state.timer = setInterval(() => {
+    state.time--
 
-    state.time--;
-
-    updateHud();
-
+    updateHud()
 
     if (state.time <= 0) {
+      clearInterval(state.timer)
 
-      clearInterval(state.timer);
-
-      onEnd();
-
+      if (typeof onEnd === "function") {
+        onEnd()
+      }
     }
-
-  }, 1000);
-
+  }, 1000)
 }
 
-
 // =====================================================
-// XP SYSTEM
+// XP / COMBO
 // =====================================================
 
 function addXP(amount) {
+  const earned =
+    amount * Math.max(1, state.combo)
 
-  state.xp +=
-    amount * state.combo;
+  state.xp += earned
 
-
-  state.combo++;
-
+  state.combo++
 
   state.bestCombo =
     Math.max(
       state.bestCombo,
-      state.combo
-    );
+      state.combo,
+    )
 
+  updateHud()
 
-  updateHud();
-
+  toast(`+${earned} XP  🔥 x${state.combo}`)
 }
-
 
 // =====================================================
 // MISTAKE / LIFE SYSTEM
 // =====================================================
 
 function mistake() {
+  state.lives--
 
-  state.lives--;
+  state.combo = 1
 
-  state.combo = 1;
-
-  updateHud();
+  updateHud()
 
   beep(
     150,
     0.12,
-    "sawtooth"
-  );
-
+    "sawtooth",
+  )
 
   if (state.lives <= 0) {
+    clearInterval(state.timer)
 
-    clearInterval(state.timer);
-
-    toast(
-      "All lives lost — restarting mission."
-    );
-
+    toast("💀 All lives lost!")
 
     setTimeout(() => {
+      state.lives = 3
+      loadLevel(state.mission)
+    }, 900)
 
-      state.lives = 3;
-
-      loadLevel(state.mission);
-
-    }, 900);
-
-    return true;
+    return true
   }
 
-
-  return false;
-
+  return false
 }
 
-
 // =====================================================
-// LOAD LEVEL
+// LEVEL LOADING
 // =====================================================
 
 function loadLevel(index) {
+  clearInterval(state.timer)
 
-  clearInterval(state.timer);
+  if (typeof state.levelTimer === "function") {
+    state.levelTimer()
+  }
 
-  state.mission = index;
+  state.mission = index
+  state.combo = 1
 
-  state.combo = 1;
-
-  updateHud();
-
+  updateHud()
 
   const container =
-    $("#levelContainer");
+    $("#levelContainer")
 
+  if (!container) return
 
-  container.innerHTML = "";
-
+  container.innerHTML = ""
 
   if (index === 0) {
-
-    loadPookkalam(container);
-
+    loadPookkalam(container)
   }
-
 
   if (index === 1) {
-
-    loadVallam(container);
-
+    loadVallam(container)
   }
-
 
   if (index === 2) {
-
-    loadHunt(container);
-
+    loadHunt(container)
   }
-
 
   if (index === 3) {
-
-    loadChoice(container);
-
+    loadChoice(container)
   }
-
 }
 
-
 // =====================================================
-// LEVEL TEMPLATE
+// LEVEL SHELL
 // =====================================================
 
 function levelShell(
   title,
   tag,
-  description
+  description,
 ) {
-
   const element =
-    document.createElement("div");
+    document.createElement("div")
 
-
-  element.className =
-    "level-card";
-
+  element.className = "level-card"
 
   element.innerHTML = `
-
     <div class="level-header">
-
       <div>
-
         <div class="eyebrow">
           ${tag}
         </div>
 
-        <h2>
-          ${title}
-        </h2>
+        <h2>${title}</h2>
 
-        <p>
-          ${description}
-        </p>
-
+        <p>${description}</p>
       </div>
 
       <div class="level-tag">
-        MEMORY
-        ${String(
-          state.mission + 1
-        ).padStart(2, "0")}
+        MISSION
+        ${String(state.mission + 1).padStart(2, "0")}
       </div>
-
     </div>
+  `
 
-  `;
-
-
-  $("#levelContainer")
-    .appendChild(element);
-
-
-  return element;
-
+  return element
 }
-
 
 // =====================================================
 // NEXT LEVEL
 // =====================================================
 
 function nextLevel() {
+  clearInterval(state.timer)
 
-  clearInterval(state.timer);
-
-  clearInterval(state.levelTimer);
-
-
-  if (state.mission < 3) {
-
-    state.mission++;
-
-
-    setTimeout(() => {
-
-      loadLevel(state.mission);
-
-    }, 450);
-
-  } else {
-
-    finishGame();
-
+  if (typeof state.levelTimer === "function") {
+    state.levelTimer()
   }
 
+  if (state.mission < 3) {
+    state.mission++
+
+    toast(
+      `MISSION ${String(
+        state.mission + 1,
+      ).padStart(2, "0")} UNLOCKED`,
+    )
+
+    setTimeout(() => {
+      loadLevel(state.mission)
+    }, 700)
+  } else {
+    finishGame()
+  }
 }
 
 // =====================================================
 // MISSION 1
-// POOKKALAM MEMORY CHALLENGE
+// POOKKALAM CORE
 // =====================================================
 
 function loadPookkalam(container) {
   const card = levelShell(
     "POOKKALAM CORE",
     "MEMORY // PRECISION",
-    "Memorize the flower sequence, then rebuild it before time runs out."
+    "Memorize the sequence. Then rebuild the Pookkalam before time runs out.",
   )
 
-  const flowers = ["🌼", "🌺", "🌸", "🪷", "🌻"]
+  container.appendChild(card)
 
-  // ---------------------------------------------
-  // TARGET SEQUENCE
-  // ---------------------------------------------
-
-  const targetSequence = [
+  const flowers = [
     "🌼",
     "🌺",
     "🌸",
     "🪷",
     "🌻",
-    "🌸",
-    "🌺",
-    "🌼",
   ]
 
-  state.pookPattern = targetSequence
+  // Random sequence every game
+  const sequenceLength = 8
+
+  const targetSequence = []
+
+  for (let i = 0; i < sequenceLength; i++) {
+    targetSequence.push(
+      flowers[
+        Math.floor(
+          Math.random() * flowers.length,
+        )
+      ],
+    )
+  }
+
+  state.pookPattern =
+    targetSequence
+
   state.pookSelected = []
 
-  // ---------------------------------------------
-  // TARGET DISPLAY
-  // ---------------------------------------------
+  // -------------------------------------------------
+  // TARGET AREA
+  // -------------------------------------------------
 
-  const targetBox = document.createElement("div")
+  const targetBox =
+    document.createElement("div")
 
-  targetBox.className = "memory-target"
+  targetBox.className =
+    "memory-target"
 
   targetBox.innerHTML = `
     <div class="eyebrow">
-      MEMORY SEQUENCE
+      TARGET SEQUENCE
     </div>
 
     <div class="target-sequence">
@@ -497,122 +430,130 @@ function loadPookkalam(container) {
             >
               ${flower}
             </span>
-          `
+          `,
         )
         .join("")}
     </div>
 
     <p class="memory-status">
-      Memorize the sequence...
+      MEMORIZE THE PATTERN
     </p>
   `
 
   card.appendChild(targetBox)
 
-  // ---------------------------------------------
+  // -------------------------------------------------
   // GRID
-  // ---------------------------------------------
+  // -------------------------------------------------
 
-  const grid = document.createElement("div")
+  const grid =
+    document.createElement("div")
 
-  grid.className = "pook-grid"
+  grid.className =
+    "pook-grid"
 
-  // We need enough copies of every flower
-  // required by the target sequence.
-  const requiredFlowers = [...targetSequence]
+  // Ensure all target flower types
+  // exist on the board.
+  const boardFlowers = [
+    ...targetSequence,
+  ]
 
-  // Add decoy flowers
-  while (requiredFlowers.length < 25) {
-    requiredFlowers.push(
+  // Add decoys until 25 cells
+  while (boardFlowers.length < 25) {
+    boardFlowers.push(
       flowers[
         Math.floor(
-          Math.random() * flowers.length
+          Math.random() * flowers.length,
         )
-      ]
+      ],
     )
   }
 
-  // Shuffle board
-  requiredFlowers.sort(
-    () => Math.random() - 0.5
+  // Shuffle
+  boardFlowers.sort(
+    () => Math.random() - 0.5,
   )
 
   const buttons = []
 
-  requiredFlowers.forEach((flower, index) => {
-    const button = document.createElement("button")
+  boardFlowers.forEach(
+    (flower, index) => {
+      const button =
+        document.createElement("button")
 
-    button.className = "flower"
+      button.type = "button"
 
-    button.type = "button"
+      button.className = "flower"
 
-    button.textContent = flower
+      button.textContent = flower
 
-    button.dataset.flower = flower
+      button.dataset.flower = flower
 
-    button.dataset.index = index
+      button.dataset.index = index
 
-    button.disabled = true
+      button.disabled = true
 
-    buttons.push(button)
+      buttons.push(button)
 
-    grid.appendChild(button)
-  })
+      grid.appendChild(button)
+    },
+  )
 
   card.appendChild(grid)
 
-  // ---------------------------------------------
-  // MEMORY COUNTDOWN
-  // ---------------------------------------------
+  // -------------------------------------------------
+  // START MEMORY PHASE
+  // -------------------------------------------------
 
   let memoryTime = 5
 
-  const status = targetBox.querySelector(
-    ".memory-status"
-  )
+  const status =
+    targetBox.querySelector(
+      ".memory-status",
+    )
 
   status.textContent =
-    `Memorize the sequence... ${memoryTime}`
+    `MEMORIZE THE PATTERN — ${memoryTime}`
 
-  const memoryTimer = setInterval(() => {
-    memoryTime--
+  const memoryTimer =
+    setInterval(() => {
+      memoryTime--
 
-    if (memoryTime > 0) {
-      status.textContent =
-        `Memorize the sequence... ${memoryTime}`
-    } else {
-      clearInterval(memoryTimer)
+      if (memoryTime > 0) {
+        status.textContent =
+          `MEMORIZE THE PATTERN — ${memoryTime}`
+      } else {
+        clearInterval(memoryTimer)
 
-      // Hide target sequence
-      targetBox.classList.add(
-        "sequence-hidden"
-      )
+        targetBox.classList.add(
+          "sequence-hidden",
+        )
 
-      status.textContent =
-        "GO! Rebuild the sequence."
+        status.textContent =
+          "⚡ GO! REBUILD THE PATTERN"
 
-      // Enable buttons
-      buttons.forEach((button) => {
-        button.disabled = false
-      })
+        buttons.forEach(button => {
+          button.disabled = false
+        })
 
-      // Start actual game timer
-      startTimer(45, () => {
-        toast("Memory timed out!")
+        startTimer(45, () => {
+          toast("⏱ MEMORY TIMED OUT")
 
-        setTimeout(() => {
-          loadLevel(0)
-        }, 700)
-      })
-    }
-  }, 1000)
+          setTimeout(() => {
+            loadLevel(0)
+          }, 700)
+        })
+      }
+    }, 1000)
 
-  // ---------------------------------------------
-  // PLAYER CLICK LOGIC
-  // ---------------------------------------------
+  // -------------------------------------------------
+  // CLICK LOGIC
+  // -------------------------------------------------
 
-  buttons.forEach((button) => {
+  buttons.forEach(button => {
     button.onclick = () => {
+      if (button.disabled) return
+
       const expected =
         targetSequence[
           state.pookSelected.length
@@ -621,45 +562,33 @@ function loadPookkalam(container) {
       const clicked =
         button.dataset.flower
 
-      // -----------------------------------------
-      // CORRECT FLOWER
-      // -----------------------------------------
-
+      // Correct
       if (clicked === expected) {
-        button.classList.add(
-          "selected",
-          "correct"
-        )
-
         button.disabled = true
 
-        state.pookSelected.push(
-          clicked
+        button.classList.add(
+          "selected",
+          "correct",
         )
 
-        // Highlight corresponding
-        // target sequence item
+        state.pookSelected.push(
+          clicked,
+        )
+
         const targetItem =
           targetBox.querySelector(
-            `[data-target="${state.pookSelected.length - 1}"]`
+            `[data-target="${state.pookSelected.length - 1}"]`,
           )
 
         if (targetItem) {
           targetItem.classList.add(
-            "completed"
+            "completed",
           )
         }
 
-        beep(620, 0.07)
+        beep(650, 0.07)
 
-        addXP(100)
-
-        status.textContent =
-          `Correct! ${state.pookSelected.length}/${targetSequence.length}`
-
-        // ---------------------------------------
-        // COMPLETED
-        // ---------------------------------------
+        addXP(80)
 
         if (
           state.pookSelected.length ===
@@ -667,41 +596,45 @@ function loadPookkalam(container) {
         ) {
           clearInterval(state.timer)
 
-          buttons.forEach((button) => {
-            button.disabled = true
-          })
+          buttons.forEach(
+            button => {
+              button.disabled = true
+            },
+          )
+
+          targetBox.classList.remove(
+            "sequence-hidden",
+          )
 
           status.textContent =
-            "✓ POOKKALAM RESTORED!"
+            "✓ POOKKALAM RESTORED"
 
           addXP(250)
 
           toast(
-            "POOKKALAM RESTORED! + BONUS XP"
+            "🌸 POOKKALAM CORE RESTORED!",
           )
 
-          setTimeout(() => {
-            nextLevel()
-          }, 1000)
+          setTimeout(
+            nextLevel,
+            1100,
+          )
         }
       }
 
-      // -----------------------------------------
-      // WRONG FLOWER
-      // -----------------------------------------
-
+      // Wrong
       else {
         button.classList.add("wrong")
 
         setTimeout(() => {
-          button.classList.remove("wrong")
+          button.classList.remove(
+            "wrong",
+          )
         }, 400)
 
-        const lostAllLives = mistake()
-
-        if (!lostAllLives) {
+        if (!mistake()) {
           toast(
-            `Wrong flower! Need ${expected}`
+            `❌ Wrong! Find ${expected}`,
           )
         }
       }
@@ -709,32 +642,26 @@ function loadPookkalam(container) {
   })
 }
 
-
 // =====================================================
 // MISSION 2
 // VALLAM RUSH
 // =====================================================
 
 function loadVallam(container) {
+  const card = levelShell(
+    "VALLAM RUSH",
+    "REFLEX // SPEED",
+    "Steer the snake boat, collect golden energy and avoid the rocks.",
+  )
 
-  const card =
-    levelShell(
-      "VALLAM RUSH",
-      "REFLEX // SPEED",
-      "Steer the snake boat, collect golden energy and avoid the rocks."
-    );
-
+  container.appendChild(card)
 
   const wrap =
-    document.createElement("div");
+    document.createElement("div")
 
-
-  wrap.className =
-    "boat-wrap";
-
+  wrap.className = "boat-wrap"
 
   wrap.innerHTML = `
-
     <div class="boat-track"></div>
 
     <div
@@ -743,26 +670,21 @@ function loadVallam(container) {
     >
       🚣
     </div>
+  `
 
-  `;
-
-
-  card.appendChild(wrap);
-
+  card.appendChild(wrap)
 
   const controls =
-    document.createElement("div");
-
+    document.createElement("div")
 
   controls.className =
-    "boat-controls";
-
+    "boat-controls"
 
   controls.innerHTML = `
-
     <button
       class="ctrl"
       data-dir="-1"
+      type="button"
     >
       ←
     </button>
@@ -770,298 +692,204 @@ function loadVallam(container) {
     <button
       class="ctrl"
       data-dir="1"
+      type="button"
     >
       →
     </button>
+  `
 
-  `;
-
-
-  card.appendChild(controls);
-
-
-  const mobileControls =
-    document.createElement("div");
-
-
-  mobileControls.className =
-    "mobile-controls";
-
-
-  mobileControls.innerHTML = `
-
-    <button
-      class="ctrl"
-      data-dir="-1"
-    >
-      ←
-    </button>
-
-    <button
-      class="ctrl"
-      data-dir="1"
-    >
-      →
-    </button>
-
-  `;
-
-
-  card.appendChild(
-    mobileControls
-  );
-
-
-  state.boatX = 50;
-
-  state.boatObjects = [];
-
+  card.appendChild(controls)
 
   const player =
-    () =>
-      $("#boatPlayer");
+    () => $("#boatPlayer")
 
+  state.boatX = 50
+  state.boatObjects = []
 
-  const move = (direction) => {
-
+  const move = direction => {
     state.boatX =
       Math.max(
-        10,
+        8,
         Math.min(
-          90,
+          92,
           state.boatX +
-          direction * 7
-        )
-      );
+            direction * 8,
+        ),
+      )
 
+    if (player()) {
+      player().style.left =
+        state.boatX + "%"
+    }
+  }
 
-    player().style.left =
-      state.boatX + "%";
-
-  };
-
-
-  card
+  controls
     .querySelectorAll("[data-dir]")
-    .forEach((button) => {
-
+    .forEach(button => {
       button.onpointerdown = () => {
-
         move(
           Number(
-            button.dataset.dir
-          )
-        );
+            button.dataset.dir,
+          ),
+        )
+      }
+    })
 
-      };
+  // Keyboard
+  const oldKeyHandler =
+    document.onkeydown
 
-    });
-
-
-  document.onkeydown = (event) => {
-
+  document.onkeydown = event => {
     if (
+      !screens.game ||
       !screens.game.classList.contains(
-        "active"
+        "active",
       )
     ) {
-
-      return;
-
+      return
     }
-
 
     if (
       [
         "ArrowLeft",
         "a",
-        "A"
+        "A",
       ].includes(event.key)
     ) {
-
-      move(-1);
-
+      move(-1)
+      event.preventDefault()
     }
-
 
     if (
       [
         "ArrowRight",
         "d",
-        "D"
+        "D",
       ].includes(event.key)
     ) {
-
-      move(1);
-
+      move(1)
+      event.preventDefault()
     }
+  }
 
-  };
-
-
+  // Spawn objects
   const spawn =
     setInterval(() => {
-
       const object =
-        document.createElement(
-          "div"
-        );
-
-
-      object.className =
-        "boat-object";
-
+        document.createElement("div")
 
       const rock =
-        Math.random() < 0.32;
+        Math.random() < 0.3
 
+      object.className =
+        "boat-object"
+
+      if (rock) {
+        object.classList.add(
+          "boat-rock",
+        )
+      }
 
       object.textContent =
-        rock ? "🪨" : "🪙";
+        rock ? "🪨" : "🪙"
 
-
-      object.classList.toggle(
-        "boat-rock",
-        rock
-      );
-
+      const x =
+        10 + Math.random() * 80
 
       object.style.left =
-        10 + Math.random() * 80 + "%";
-
+        x + "%"
 
       object.style.top =
-        "-45px";
+        "-45px"
 
+      wrap.appendChild(object)
 
-      wrap.appendChild(object);
-
-
-      const item = {
-
+      state.boatObjects.push({
         el: object,
-
         y: -45,
-
-        x: parseFloat(
-          object.style.left
-        ),
-
+        x,
         rock,
+        done: false,
+      })
+    }, 600)
 
-        done: false
-
-      };
-
-
-      state.boatObjects.push(item);
-
-    }, 650);
-
-
+  // Movement
   const tick =
     setInterval(() => {
-
-      state.boatObjects
-        .forEach((object) => {
-
-          object.y += 4.8;
-
+      state.boatObjects.forEach(
+        object => {
+          object.y += 5
 
           object.el.style.top =
-            object.y + "px";
-
+            object.y + "px"
 
           const hitY =
-            object.y > 300 &&
-            object.y < 355;
-
+            object.y > 280 &&
+            object.y < 360
 
           const distance =
             Math.abs(
               object.x -
-              state.boatX
-            );
-
+                state.boatX,
+            )
 
           if (
             hitY &&
-            distance < 9 &&
+            distance < 10 &&
             !object.done
           ) {
+            object.done = true
 
-            object.done = true;
-
-
-            object.el.remove();
-
+            object.el.remove()
 
             if (object.rock) {
-
               if (!mistake()) {
-
                 toast(
-                  "Rock hit! - life"
-                );
-
+                  "🪨 ROCK HIT!",
+                )
               }
-
             } else {
+              addXP(70)
 
-              addXP(90);
-
-              beep(
-                720,
-                0.07
-              );
+              beep(720, 0.07)
 
               toast(
-                "Energy collected +XP"
-              );
-
+                "🪙 GOLDEN ENERGY +XP",
+              )
             }
-
           }
-
-        });
-
+        },
+      )
 
       state.boatObjects =
         state.boatObjects.filter(
-          (object) =>
-            object.y < 430 &&
-            !object.done
-        );
-
-    }, 45);
-
+          object =>
+            object.y < 450 &&
+            !object.done,
+        )
+    }, 45)
 
   const cleanup = () => {
+    clearInterval(spawn)
+    clearInterval(tick)
 
-    clearInterval(spawn);
-
-    clearInterval(tick);
-
-  };
-
+    document.onkeydown =
+      oldKeyHandler
+  }
 
   state.levelTimer =
-    cleanup;
+    cleanup
 
+  startTimer(35, () => {
+    cleanup()
 
-  startTimer(
-    35,
-    () => {
+    toast(
+      "🚣 RIVER CLEARED!",
+    )
 
-      cleanup();
-
-      nextLevel();
-
-    }
-  );
-
+    nextLevel()
+  })
 }
-
 
 // =====================================================
 // MISSION 3
@@ -1069,231 +897,200 @@ function loadVallam(container) {
 // =====================================================
 
 function loadHunt(container) {
+  const card = levelShell(
+    "ONAM HUNT",
+    "SEARCH // FOCUS",
+    "Find the hidden festival objects. Avoid the decoys.",
+  )
 
-  const card =
-    levelShell(
-      "ONAM HUNT",
-      "SEARCH // FOCUS",
-      "Find the five hidden festival objects. Avoid the decoys."
-    );
-
+  container.appendChild(card)
 
   const area =
-    document.createElement("div");
+    document.createElement("div")
 
-
-  area.className =
-    "hunt-area";
-
+  area.className = "hunt-area"
 
   const targets = [
     "🪔",
     "🥥",
     "🍌",
     "🌴",
-    "🎋"
-  ];
+    "🎋",
+    "🌺",
+  ]
 
+  state.huntFound = 0
 
-  const usedPositions = [];
+  const usedPositions = []
 
-
-  state.huntFound = 0;
-
+  // -------------------------------------------------
+  // TARGETS
+  // -------------------------------------------------
 
   targets.forEach(
     (item, index) => {
-
-      let x;
-      let y;
-
+      let x
+      let y
 
       do {
-
         x =
-          8 +
-          Math.random() *
-          84;
-
+          7 +
+          Math.random() * 84
 
         y =
-          10 +
-          Math.random() *
-          76;
-
+          8 +
+          Math.random() * 78
       } while (
         usedPositions.some(
-          (position) =>
+          position =>
             Math.abs(
-              position.x - x
-            ) < 13 &&
+              position.x - x,
+            ) < 12 &&
             Math.abs(
-              position.y - y
-            ) < 13
+              position.y - y,
+            ) < 12,
         )
-      );
-
+      )
 
       usedPositions.push({
         x,
-        y
-      });
-
+        y,
+      })
 
       const button =
-        document.createElement(
-          "button"
-        );
+        document.createElement("button")
 
+      button.type = "button"
 
       button.className =
-        "hunt-item";
+        "hunt-item"
 
-
-      button.textContent =
-        item;
-
+      button.textContent = item
 
       button.style.left =
-        x + "%";
-
+        x + "%"
 
       button.style.top =
-        y + "%";
-
+        y + "%"
 
       button.onclick = () => {
-
         if (
           button.classList.contains(
-            "found"
+            "found",
           )
         ) {
-
-          return;
-
+          return
         }
 
-
         button.classList.add(
-          "found"
-        );
+          "found",
+        )
 
+        state.huntFound++
 
-        state.huntFound++;
-
-
-        addXP(110);
-
+        addXP(100)
 
         beep(
           600 + index * 80,
-          0.08
-        );
-
+          0.08,
+        )
 
         toast(
-          `${state.huntFound}/5 FOUND`
-        );
-
+          `${state.huntFound}/${targets.length} FOUND`,
+        )
 
         if (
-          state.huntFound === 5
+          state.huntFound ===
+          targets.length
         ) {
+          clearInterval(state.timer)
+
+          addXP(300)
+
+          toast(
+            "🔎 ONAM HUNT COMPLETE!",
+          )
 
           setTimeout(
             nextLevel,
-            800
-          );
-
+            900,
+          )
         }
-
-      };
-
-
-      area.appendChild(button);
-
-    }
-  );
-
-
-  // DECOYS
-
-  for (let i = 0; i < 3; i++) {
-
-    const button =
-      document.createElement(
-        "button"
-      );
-
-
-    button.className =
-      "hunt-item";
-
-
-    button.textContent =
-      "❌";
-
-
-    button.style.left =
-      5 + Math.random() * 88 + "%";
-
-
-    button.style.top =
-      8 + Math.random() * 80 + "%";
-
-
-    button.onclick = () => {
-
-      if (
-        button.classList.contains(
-          "found"
-        )
-      ) {
-
-        return;
-
       }
 
+      area.appendChild(button)
+    },
+  )
+
+  // -------------------------------------------------
+  // DECOYS
+  // -------------------------------------------------
+
+  const decoys = [
+    "❌",
+    "⚠️",
+    "👾",
+    "💀",
+    "🌀",
+  ]
+
+  for (
+    let i = 0;
+    i < decoys.length;
+    i++
+  ) {
+    const button =
+      document.createElement("button")
+
+    button.type = "button"
+
+    button.className =
+      "hunt-item decoy"
+
+    button.textContent =
+      decoys[i]
+
+    button.style.left =
+      5 + Math.random() * 88 + "%"
+
+    button.style.top =
+      8 + Math.random() * 80 + "%"
+
+    button.onclick = () => {
+      if (
+        button.classList.contains(
+          "found",
+        )
+      ) {
+        return
+      }
 
       button.classList.add(
-        "found"
-      );
+        "found",
+      )
 
+      if (!mistake()) {
+        toast(
+          "⚠️ DECOY! LIFE LOST",
+        )
+      }
+    }
 
-      mistake();
-
-
-      toast(
-        "Decoy! Combo reset"
-      );
-
-    };
-
-
-    area.appendChild(button);
-
+    area.appendChild(button)
   }
 
+  card.appendChild(area)
 
-  card.appendChild(area);
+  startTimer(40, () => {
+    toast(
+      "⏱ ONAM HUNT TIMED OUT",
+    )
 
-
-  startTimer(
-    40,
-    () => {
-
-      toast(
-        "Hunt timed out."
-      );
-
-      loadLevel(2);
-
-    }
-  );
-
+    setTimeout(() => {
+      loadLevel(2)
+    }, 700)
+  })
 }
-
 
 // =====================================================
 // MISSION 4
@@ -1301,409 +1098,363 @@ function loadHunt(container) {
 // =====================================================
 
 const questions = [
-
   {
-    q:
-      "Which festival is celebrated with the grand flower carpet called a Pookkalam?",
-
+    q: "Which festival is celebrated with the grand flower carpet called a Pookkalam?",
     a: [
       "Onam",
       "Vishu",
       "Thrissur Pooram",
-      "Navaratri"
+      "Navaratri",
     ],
-
-    c: 0
+    c: 0,
   },
 
-
   {
-    q:
-      "Vallam Kali is traditionally associated with what?",
-
+    q: "Vallam Kali is traditionally associated with what?",
     a: [
       "Snake boat races",
       "Kite flying",
       "Drum battles",
-      "Bull racing"
+      "Bull racing",
     ],
-
-    c: 0
+    c: 0,
   },
 
-
   {
-    q:
-      "What is the traditional vegetarian feast served on banana leaves during Onam?",
-
+    q: "What is the traditional vegetarian feast served on banana leaves during Onam?",
     a: [
       "Sadya",
       "Sadhya Roll",
       "Thali",
-      "Kanji"
+      "Kanji",
     ],
-
-    c: 0
+    c: 0,
   },
 
-
   {
-    q:
-      "The story of Onam is strongly associated with which legendary king?",
-
+    q: "The story of Onam is strongly associated with which legendary king?",
     a: [
       "Mahabali",
       "Ashoka",
       "Raja Raja Chola",
-      "Krishnadevaraya"
+      "Krishnadevaraya",
     ],
-
-    c: 0
+    c: 0,
   },
 
-
   {
-    q:
-      "A modern way to keep Onam celebrations sustainable is to…",
-
+    q: "A modern way to keep Onam celebrations sustainable is to…",
     a: [
       "Use reusable decor",
       "Increase plastic waste",
       "Waste food",
-      "Avoid local flowers"
+      "Avoid local flowers",
     ],
+    c: 0,
+  },
 
-    c: 0
-  }
+  {
+    q: "Which traditional item is commonly used to serve a Sadya?",
+    a: [
+      "Banana leaf",
+      "Plastic tray",
+      "Paper box",
+      "Glass plate",
+    ],
+    c: 0,
+  },
 
-];
-
+  {
+    q: "Which activity is a famous part of Onam celebrations?",
+    a: [
+      "Vallam Kali",
+      "Ice hockey",
+      "Skiing",
+      "Surfing",
+    ],
+    c: 0,
+  },
+]
 
 // =====================================================
 // CHOICE LEVEL
 // =====================================================
 
 function loadChoice(container) {
+  const card = levelShell(
+    "MAHABALI'S CHOICE",
+    "CULTURE // LOGIC",
+    "Answer rapid-fire Onam questions. Accuracy keeps your combo alive.",
+  )
 
-  const card =
-    levelShell(
-      "MAHABALI'S CHOICE",
-      "CULTURE // LOGIC",
-      "Answer three rapid-fire questions. Accuracy keeps your combo alive."
-    );
+  container.appendChild(card)
 
-
-  let questionIndex = 0;
-
+  let questionIndex = 0
 
   const box =
-    document.createElement(
-      "div"
-    );
-
+    document.createElement("div")
 
   box.className =
-    "question-box";
+    "question-box"
 
-
-  card.appendChild(box);
-
+  card.appendChild(box)
 
   function renderQuestion() {
-
     const question =
       questions[
-        (state.mission +
-          questionIndex) %
+        questionIndex %
           questions.length
-      ];
-
+      ]
 
     box.innerHTML = `
-
       <div class="eyebrow">
-        QUESTION
-        ${questionIndex + 1}
-        / 3
+        FINAL CHALLENGE
       </div>
 
-      <h3>
-        ${question.q}
-      </h3>
+      <div class="question-progress">
+        ${questionIndex + 1} / 5
+      </div>
+
+      <h3>${question.q}</h3>
 
       <div class="answers"></div>
+    `
 
-    `;
-
+    const answers =
+      box.querySelector(
+        ".answers",
+      )
 
     question.a.forEach(
       (answer, index) => {
-
         const button =
-          document.createElement(
-            "button"
-          );
+          document.createElement("button")
 
+        button.type = "button"
 
         button.className =
-          "answer";
-
+          "answer"
 
         button.textContent =
-          answer;
-
+          answer
 
         button.onclick = () => {
+          // Disable all answers
+          box
+            .querySelectorAll(
+              ".answer",
+            )
+            .forEach(
+              button => {
+                button.disabled =
+                  true
+              },
+            )
 
           if (
             index === question.c
           ) {
-
             button.classList.add(
-              "correct"
-            );
+              "correct",
+            )
 
-
-            addXP(160);
-
+            addXP(180)
 
             beep(
-              650,
-              0.08
-            );
+              700,
+              0.08,
+            )
 
-
-            questionIndex++;
-
+            questionIndex++
 
             if (
-              questionIndex === 3
+              questionIndex >= 5
             ) {
+              clearInterval(
+                state.timer,
+              )
+
+              addXP(500)
 
               toast(
-                "ALL MEMORY FRAGMENTS RESTORED!"
-              );
-
+                "👑 KINGDOM RESTORED!",
+              )
 
               setTimeout(
                 nextLevel,
-                800
-              );
-
+                1100,
+              )
             } else {
-
               setTimeout(
                 renderQuestion,
-                350
-              );
-
+                500,
+              )
             }
-
           } else {
-
             button.classList.add(
-              "wrong"
-            );
+              "wrong",
+            )
 
-
-            mistake();
-
+            mistake()
 
             toast(
-              "Incorrect — combo reset"
-            );
+              "❌ INCORRECT — COMBO RESET",
+            )
 
+            setTimeout(
+              renderQuestion,
+              650,
+            )
           }
+        }
 
-        };
-
-
-        box
-          .querySelector(".answers")
-          .appendChild(button);
-
-      }
-    );
-
+        answers.appendChild(
+          button,
+        )
+      },
+    )
   }
 
+  renderQuestion()
 
-  renderQuestion();
+  startTimer(45, () => {
+    toast(
+      "⏱ FINAL CHALLENGE TIMED OUT",
+    )
 
-
-  startTimer(
-    45,
-    () => {
-
-      toast(
-        "Choice mission timed out."
-      );
-
-      loadLevel(3);
-
-    }
-  );
-
+    setTimeout(() => {
+      loadLevel(3)
+    }, 700)
+  })
 }
 
-
 // =====================================================
-// FINISH GAME
+// FINAL SCORE
 // =====================================================
 
 function finishGame() {
-
-  clearInterval(state.timer);
-
+  clearInterval(state.timer)
 
   const score =
     Math.floor(
       state.xp +
-      Math.max(0, state.time) * 15 +
-      state.bestCombo * 50
-    );
-
+        Math.max(
+          0,
+          state.time,
+        ) *
+          15 +
+        state.bestCombo * 50,
+    )
 
   state.finalScore =
-    score;
+    score
 
+  const finalScore =
+    $("#finalScore")
 
-  $("#finalScore").textContent =
-    String(score).padStart(
-      4,
-      "0"
-    );
+  const finalCombo =
+    $("#finalCombo")
 
+  const finalRank =
+    $("#finalRank")
 
-  $("#finalCombo").textContent =
-    "x" +
-    state.bestCombo;
-
-
-  let rank = "C";
-
-
-  if (score >= 5000) {
-
-    rank = "S";
-
-  } else if (score >= 3500) {
-
-    rank = "A";
-
-  } else if (score >= 2200) {
-
-    rank = "B";
-
+  if (finalScore) {
+    finalScore.textContent =
+      String(score).padStart(
+        4,
+        "0",
+      )
   }
 
+  if (finalCombo) {
+    finalCombo.textContent =
+      "x" +
+      state.bestCombo
+  }
 
-  $("#finalRank").textContent =
-    rank;
+  let rank = "C"
 
+  if (score >= 7000) {
+    rank = "S"
+  } else if (score >= 5000) {
+    rank = "A"
+  } else if (score >= 3200) {
+    rank = "B"
+  }
 
-  showScreen("final");
+  if (finalRank) {
+    finalRank.textContent =
+      rank
+  }
 
+  showScreen("final")
 
-  beep(880, 0.2);
-
+  beep(880, 0.2)
 
   setTimeout(() => {
-
-    beep(1100, 0.2);
-
-  }, 180);
-
+    beep(1100, 0.2)
+  }, 180)
 }
-
 
 // =====================================================
 // LEADERBOARD
 // =====================================================
 
 function getScores() {
-
   try {
-
     return JSON.parse(
       localStorage.getItem(
-        "onamExeScores"
-      ) || "[]"
-    );
-
-  } catch (error) {
-
-    return [];
-
+        "onamExeScores",
+      ) || "[]",
+    )
+  } catch {
+    return []
   }
-
 }
 
-
-// =====================================================
-// ESCAPE HTML
-// =====================================================
-
 function escapeHtml(text) {
-
-  return text.replace(
+  return String(text).replace(
     /[&<>"']/g,
-    (character) => {
-
-      return {
+    character =>
+      ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
-        "'": "&#039;"
-      }[character];
-
-    }
-  );
-
+        "'": "&#039;",
+      })[character],
+  )
 }
 
-
-// =====================================================
-// RENDER LEADERBOARD
-// =====================================================
-
 function renderLeaderboard() {
-
   const list =
-    $("#leaderboardList");
+    $("#leaderboardList")
 
+  if (!list) return
 
   const scores =
     getScores()
       .sort(
         (a, b) =>
-          b.score - a.score
+          b.score - a.score,
       )
-      .slice(0, 10);
-
+      .slice(0, 10)
 
   if (!scores.length) {
-
     list.innerHTML = `
-
       <div class="empty">
-        No champions yet.
+        🏆 No champions yet.
         Be the first!
       </div>
+    `
 
-    `;
-
-    return;
-
+    return
   }
-
 
   list.innerHTML =
     scores
       .map(
         (score, index) => `
-
           <div class="leader-row">
 
             <span class="rank">
@@ -1712,7 +1463,7 @@ function renderLeaderboard() {
 
             <span class="name">
               ${escapeHtml(
-                score.name
+                score.name,
               )}
             </span>
 
@@ -1721,246 +1472,248 @@ function renderLeaderboard() {
             </span>
 
           </div>
-
-        `
+        `,
       )
-      .join("");
-
+      .join("")
 }
 
-
 // =====================================================
-// START GAME
-// =====================================================
-
-$("#startBtn").onclick = () => {
-
-  showScreen("briefing");
-
-  beep(
-    500,
-    0.1
-  );
-
-};
-
-
-// =====================================================
-// BEGIN PROTOCOL
+// START BUTTON
 // =====================================================
 
-$("#beginBtn").onclick = () => {
+const startBtn =
+  $("#startBtn")
 
-  state = {
+if (startBtn) {
+  startBtn.onclick = () => {
+    showScreen("briefing")
 
-    ...state,
+    beep(500, 0.1)
+  }
+}
 
-    mission: 0,
+// =====================================================
+// BEGIN GAME
+// =====================================================
 
-    xp: 0,
+const beginBtn =
+  $("#beginBtn")
 
-    combo: 1,
+if (beginBtn) {
+  beginBtn.onclick = () => {
+    clearInterval(state.timer)
 
-    bestCombo: 1,
+    state = {
+      mission: 0,
+      xp: 0,
+      combo: 1,
+      bestCombo: 1,
+      lives: 3,
+      time: 45,
+      timer: null,
+      levelTimer: null,
+      sound: state.sound,
 
-    lives: 3
+      boatX: 50,
+      boatObjects: [],
 
-  };
+      huntFound: 0,
+      pookPattern: [],
+      pookSelected: [],
 
+      finalScore: 0,
+    }
 
-  showScreen("game");
+    updateHud()
 
+    showScreen("game")
 
-  loadLevel(0);
+    loadLevel(0)
 
-
-  beep(
-    600,
-    0.1
-  );
-
-};
-
+    beep(600, 0.1)
+  }
+}
 
 // =====================================================
 // LEADERBOARD BUTTON
 // =====================================================
 
-$("#leaderBtn").onclick = () => {
+const leaderBtn =
+  $("#leaderBtn")
 
-  renderLeaderboard();
+if (leaderBtn) {
+  leaderBtn.onclick = () => {
+    renderLeaderboard()
 
-  showScreen("leader");
-
-};
-
+    showScreen("leader")
+  }
+}
 
 // =====================================================
 // FINAL LEADERBOARD
 // =====================================================
 
-$("#finalLeaderBtn").onclick = () => {
+const finalLeaderBtn =
+  $("#finalLeaderBtn")
 
-  renderLeaderboard();
+if (finalLeaderBtn) {
+  finalLeaderBtn.onclick = () => {
+    renderLeaderboard()
 
-  showScreen("leader");
-
-};
-
+    showScreen("leader")
+  }
+}
 
 // =====================================================
 // CLOSE LEADERBOARD
 // =====================================================
 
-$("#closeLeaderBtn").onclick = () => {
+const closeLeaderBtn =
+  $("#closeLeaderBtn")
 
-  showScreen("start");
-
-};
-
+if (closeLeaderBtn) {
+  closeLeaderBtn.onclick = () => {
+    showScreen("start")
+  }
+}
 
 // =====================================================
 // REPLAY
 // =====================================================
 
-$("#replayBtn").onclick = () => {
+const replayBtn =
+  $("#replayBtn")
 
-  $("#playerName").value = "";
+if (replayBtn) {
+  replayBtn.onclick = () => {
+    const playerName =
+      $("#playerName")
 
-  showScreen("briefing");
+    if (playerName) {
+      playerName.value = ""
+    }
 
-};
-
+    showScreen("briefing")
+  }
+}
 
 // =====================================================
 // SAVE SCORE
 // =====================================================
 
-$("#saveScoreBtn").onclick = () => {
+const saveScoreBtn =
+  $("#saveScoreBtn")
 
-  const name =
-    (
+if (saveScoreBtn) {
+  saveScoreBtn.onclick = () => {
+    const input =
       $("#playerName")
-        .value
-        .trim() ||
-      "PLAYER"
-    ).slice(0, 14);
 
+    const name =
+      (
+        input?.value.trim() ||
+        "PLAYER"
+      ).slice(0, 14)
 
-  const scores =
-    getScores();
+    const scores =
+      getScores()
 
+    scores.push({
+      name,
+      score: state.finalScore,
+    })
 
-  scores.push({
-
-    name: name,
-
-    score: state.finalScore
-
-  });
-
-
-  scores.sort(
-    (a, b) =>
-      b.score - a.score
-  );
-
-
-  localStorage.setItem(
-    "onamExeScores",
-    JSON.stringify(
-      scores.slice(0, 20)
+    scores.sort(
+      (a, b) =>
+        b.score - a.score,
     )
-  );
 
+    localStorage.setItem(
+      "onamExeScores",
+      JSON.stringify(
+        scores.slice(0, 20),
+      ),
+    )
 
-  toast(
-    "Score saved to the Hall of Fame!"
-  );
+    toast(
+      "🏆 SCORE SAVED!",
+    )
 
+    renderLeaderboard()
 
-  renderLeaderboard();
-
-
-  setTimeout(() => {
-
-    showScreen("leader");
-
-  }, 500);
-
-};
-
-
-// =====================================================
-// SOUND BUTTON
-// =====================================================
-
-$("#soundBtn").onclick = () => {
-
-  state.sound =
-    !state.sound;
-
-
-  $("#soundBtn").textContent =
-    state.sound
-      ? "🔊"
-      : "🔇";
-
-
-  if (state.sound) {
-
-    beep(
-      500,
-      0.08
-    );
-
+    setTimeout(() => {
+      showScreen("leader")
+    }, 500)
   }
+}
 
-};
+// =====================================================
+// SOUND
+// =====================================================
 
+const soundBtn =
+  $("#soundBtn")
+
+if (soundBtn) {
+  soundBtn.onclick = () => {
+    state.sound =
+      !state.sound
+
+    soundBtn.textContent =
+      state.sound
+        ? "🔊"
+        : "🔇"
+
+    if (state.sound) {
+      beep(500, 0.08)
+    }
+  }
+}
 
 // =====================================================
 // HELP MODAL
 // =====================================================
 
-$("#helpBtn").onclick = () => {
+const helpBtn =
+  $("#helpBtn")
 
+const helpModal =
   $("#helpModal")
-    .classList
-    .remove("hidden");
 
-};
+const closeHelp =
+  $("#closeHelp")
 
-
-$("#closeHelp").onclick = () => {
-
-  $("#helpModal")
-    .classList
-    .add("hidden");
-
-};
-
-
-$("#helpModal").onclick = (
-  event
-) => {
-
-  if (
-    event.target.id ===
-    "helpModal"
-  ) {
-
-    $("#helpModal")
-      .classList
-      .add("hidden");
-
+if (helpBtn && helpModal) {
+  helpBtn.onclick = () => {
+    helpModal.classList.remove(
+      "hidden",
+    )
   }
+}
 
-};
+if (closeHelp && helpModal) {
+  closeHelp.onclick = () => {
+    helpModal.classList.add(
+      "hidden",
+    )
+  }
+}
 
+if (helpModal) {
+  helpModal.onclick = event => {
+    if (
+      event.target.id ===
+      "helpModal"
+    ) {
+      helpModal.classList.add(
+        "hidden",
+      )
+    }
+  }
+}
 
 // =====================================================
 // INITIAL HUD
 // =====================================================
 
-updateHud();
+updateHud()

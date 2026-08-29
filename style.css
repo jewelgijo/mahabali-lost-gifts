@@ -1881,3 +1881,540 @@ main {
     font-size: 21px;
   }
 }
+/* =====================================================
+   MAHABALI.exe UPGRADE
+   ===================================================== */
+
+/* MEMORY TARGET */
+
+.memory-target {
+  width: min(760px, 92vw);
+  margin: 20px auto 28px;
+  padding: 20px;
+  text-align: center;
+
+  border: 1px solid rgba(255, 210, 80, 0.25);
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(10px);
+}
+
+.target-sequence {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.target-flower {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+
+  font-size: 27px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  transition: 0.25s ease;
+}
+
+.target-flower.completed {
+  transform: scale(1.12);
+
+  background: rgba(90, 220, 120, 0.18);
+
+  border-color: rgba(90, 220, 120, 0.75);
+}
+
+.memory-status {
+  margin-top: 15px;
+
+  font-size: 13px;
+  letter-spacing: 1px;
+
+  opacity: 0.8;
+}
+
+/* HIDE MEMORY */
+
+.sequence-hidden .target-sequence {
+  filter: blur(13px);
+
+  opacity: 0.12;
+}
+
+/* POOKKALAM GRID */
+
+.pook-grid {
+  width: min(570px, 94vw);
+
+  margin: auto;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, 1fr);
+
+  gap: 11px;
+
+  padding: 18px;
+
+  border-radius: 24px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255, 200, 60, 0.09),
+      rgba(0, 0, 0, 0.16)
+    );
+
+  border: 1px solid
+    rgba(255, 210, 80, 0.18);
+}
+
+.flower {
+  aspect-ratio: 1;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.1);
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.025)
+    );
+
+  font-size: clamp(25px, 5vw, 40px);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.flower:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.04);
+
+  border-color:
+    rgba(255, 210, 70, 0.75);
+
+  background:
+    rgba(255, 200, 60, 0.12);
+}
+
+.flower:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.flower:disabled {
+  cursor: default;
+}
+
+.flower.correct {
+  opacity: 0.4;
+
+  background:
+    rgba(70, 220, 110, 0.2);
+
+  border-color:
+    rgba(70, 220, 110, 0.8);
+
+  transform: scale(0.92);
+}
+
+.flower.wrong {
+  background:
+    rgba(255, 60, 60, 0.2);
+
+  border-color:
+    rgba(255, 70, 70, 0.9);
+
+  animation:
+    flowerShake 0.35s ease;
+}
+
+@keyframes flowerShake {
+  0% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-7px);
+  }
+
+  50% {
+    transform: translateX(7px);
+  }
+
+  75% {
+    transform: translateX(-5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* =====================================================
+   VALLAM
+   ===================================================== */
+
+.boat-wrap {
+  position: relative;
+
+  width: min(800px, 94vw);
+
+  height: 430px;
+
+  margin: 20px auto;
+
+  overflow: hidden;
+
+  border-radius: 26px;
+
+  border: 1px solid
+    rgba(255, 210, 80, 0.2);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(30, 100, 130, 0.22),
+      rgba(0, 30, 50, 0.5)
+    );
+}
+
+.boat-track {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 38px,
+      rgba(255, 255, 255, 0.035) 39px,
+      transparent 40px
+    );
+
+  animation:
+    waterMove 1.2s linear infinite;
+}
+
+@keyframes waterMove {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(40px);
+  }
+}
+
+.boat-player {
+  position: absolute;
+
+  left: 50%;
+  bottom: 55px;
+
+  transform: translateX(-50%);
+
+  font-size: 48px;
+
+  z-index: 5;
+
+  transition: left 0.12s ease;
+
+  filter:
+    drop-shadow(
+      0 5px 12px
+      rgba(0, 0, 0, 0.5)
+    );
+}
+
+.boat-object {
+  position: absolute;
+
+  z-index: 4;
+
+  font-size: 34px;
+
+  transform:
+    translateX(-50%);
+}
+
+.boat-rock {
+  font-size: 38px;
+}
+
+.boat-controls {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 18px;
+
+  margin: 18px 0;
+}
+
+.ctrl {
+  min-width: 80px;
+
+  min-height: 55px;
+
+  border-radius: 14px;
+
+  border: 1px solid
+    rgba(255, 210, 80, 0.3);
+
+  background:
+    rgba(255, 255, 255, 0.06);
+
+  font-size: 25px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.ctrl:hover {
+  transform: translateY(-3px);
+
+  background:
+    rgba(255, 200, 60, 0.13);
+}
+
+/* =====================================================
+   ONAM HUNT
+   ===================================================== */
+
+.hunt-area {
+  position: relative;
+
+  width: min(850px, 94vw);
+
+  height: 470px;
+
+  margin: 20px auto;
+
+  overflow: hidden;
+
+  border-radius: 25px;
+
+  border: 1px solid
+    rgba(255, 210, 80, 0.2);
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255, 190, 50, 0.07),
+      rgba(0, 0, 0, 0.2)
+    );
+}
+
+.hunt-item {
+  position: absolute;
+
+  width: 58px;
+  height: 58px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+
+  background:
+    rgba(255, 255, 255, 0.05);
+
+  font-size: 30px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    opacity 0.2s ease;
+}
+
+.hunt-item:hover {
+  transform:
+    translate(-50%, -50%)
+    scale(1.18);
+
+  background:
+    rgba(255, 200, 60, 0.13);
+}
+
+.hunt-item.found {
+  opacity: 0.25;
+
+  transform:
+    translate(-50%, -50%)
+    scale(0.75);
+
+  pointer-events: none;
+}
+
+.hunt-item.decoy {
+  border-color:
+    rgba(255, 70, 70, 0.2);
+}
+
+/* =====================================================
+   QUESTIONS
+   ===================================================== */
+
+.question-box {
+  width: min(780px, 94vw);
+
+  margin: 35px auto;
+
+  padding: 35px;
+
+  border-radius: 25px;
+
+  border: 1px solid
+    rgba(255, 210, 80, 0.2);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+}
+
+.question-progress {
+  margin: 10px 0;
+
+  opacity: 0.6;
+
+  font-size: 13px;
+}
+
+.question-box h3 {
+  margin: 20px 0 25px;
+
+  font-size: clamp(
+    20px,
+    3vw,
+    30px
+  );
+
+  line-height: 1.35;
+}
+
+.answers {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 14px;
+}
+
+.answer {
+  min-height: 60px;
+
+  padding: 14px 18px;
+
+  border-radius: 14px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  text-align: left;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.answer:hover:not(:disabled) {
+  transform: translateY(-3px);
+
+  border-color:
+    rgba(255, 210, 70, 0.7);
+
+  background:
+    rgba(255, 200, 60, 0.1);
+}
+
+.answer.correct {
+  background:
+    rgba(70, 220, 110, 0.2);
+
+  border-color:
+    rgba(70, 220, 110, 0.8);
+}
+
+.answer.wrong {
+  background:
+    rgba(255, 60, 60, 0.2);
+
+  border-color:
+    rgba(255, 60, 60, 0.8);
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 650px) {
+  .pook-grid {
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .flower {
+    border-radius: 11px;
+  }
+
+  .target-flower {
+    width: 39px;
+    height: 39px;
+
+    font-size: 21px;
+  }
+
+  .boat-wrap {
+    height: 360px;
+  }
+
+  .hunt-area {
+    height: 430px;
+  }
+
+  .answers {
+    grid-template-columns: 1fr;
+  }
+
+  .question-box {
+    padding: 22px;
+  }
+
+  .hunt-item {
+    width: 50px;
+    height: 50px;
+  }
+}
